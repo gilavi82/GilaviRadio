@@ -65,6 +65,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 let favs = store.get("favs", []);
+let myVotes = store.get("myVotes", {}); // uuid → "on" | "off" (existir = ya enviado)
+
 const isFav = (id) => favs.some((f) => f.stationuuid === id);
 function toggleFav(st) {
   if (isFav(st.stationuuid)) favs = favs.filter((f) => f.stationuuid !== st.stationuuid);
@@ -280,6 +282,7 @@ function refreshListsState() {
   if (current) {
     $("pFav").textContent = isFav(current.stationuuid) ? "★" : "☆";
     $("pFav").classList.toggle("fav", isFav(current.stationuuid));
+    paintVote();
   }
 }
 
@@ -962,7 +965,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.4";
+const APP_VERSION = "4.5";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
@@ -1165,6 +1168,48 @@ window.addEventListener("online", () => { if (wantPlaying) { retries = 0; start(
 
 $("pToggle").onclick = () => (wantPlaying ? stop() : start());
 $("pFav").onclick = () => current && toggleFav(current);
+
+// ---------- Votar la emisora en Radio Browser ----------
+// Solo se envía UN voto por emisora desde esta app. Radio Browser no permite borrar votos:
+// si lo vuelves a pulsar se quita la marca aquí, pero el voto ya enviado se queda allí,
+// y si lo marcas otra vez no se envía de nuevo.
+function paintVote() {
+  const b = $("pVote");
+  if (!b || !current) return;
+  const on = myVotes[current.stationuuid] === "on";
+  b.classList.toggle("voted", on);
+  b.setAttribute("aria-label", on ? "Quitar mi voto" : "Votar esta emisora");
+}
+$("pVote").innerHTML = THUMB_SVG;
+$("pVote").onclick = async () => {
+  const st = current;
+  if (!st) return;
+  const id = st.stationuuid, state = myVotes[id];
+  if (state === "on") {
+    myVotes[id] = "off"; store.set("myVotes", myVotes); paintVote();
+    toast("Voto quitado en la app. Radio Browser no deja borrar votos, allí se queda.");
+    return;
+  }
+  if (state === "off") {
+    myVotes[id] = "on"; store.set("myVotes", myVotes); paintVote();
+    toast("Marcada otra vez. No se envía un voto nuevo: ya votaste esta emisora.");
+    return;
+  }
+  const b = $("pVote");
+  b.disabled = true;
+  try {
+    const r = await api("vote/" + id);
+    myVotes[id] = "on"; store.set("myVotes", myVotes);
+    if (r && r.ok) {
+      st.votes = (Number(st.votes) || 0) + 1;
+      setPop(st);
+      document.querySelectorAll(".st").forEach((li) => { if (li.dataset.id === id) { const p = li.querySelector(".stPop"); if (p) fillPop(p, st); } });
+      toast("¡Voto enviado a Radio Browser!");
+    } else toast("Radio Browser dice: " + ((r && r.message) || "no se pudo votar ahora"));
+  } catch {
+    toast("No se pudo enviar el voto. Revisa tu conexión.");
+  } finally { b.disabled = false; paintVote(); }
+};
 
 function step(dir) {
   if (randomMode) { if (dir > 0) nextRandom(); return; }
