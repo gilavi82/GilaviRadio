@@ -947,7 +947,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.0";
+const APP_VERSION = "4.1";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
