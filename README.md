@@ -15,3 +15,4 @@ Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base
 - Favoritas guardadas en el propio iPhone.
 - Sigue sonando con la pantalla bloqueada, con controles en la pantalla de bloqueo.
 - Reconexión automática y temporizador de apagado.
+- Volumen de 1 en 1 % (solo en las emisoras que lo permiten; en las demás, botones del iPhone).
