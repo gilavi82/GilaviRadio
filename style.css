@@ -112,3 +112,8 @@ button, input, select { font: inherit; color: inherit; }
 .pickList li.sel .chk { background: var(--accent); border-color: var(--accent); }
 .pickList .pName2 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pickList .pCount { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.favBar { display: flex; justify-content: flex-end; margin: 8px 0 4px; }
+#favSortTools { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.moveBtns { display: flex; gap: 4px; flex: none; }
+.moveBtns button { background: var(--card); border: 1px solid var(--line); border-radius: 8px; width: 40px; height: 36px; font-size: 16px; }
+.moveBtns button:disabled { opacity: .3; }

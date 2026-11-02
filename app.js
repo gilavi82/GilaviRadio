@@ -142,8 +142,8 @@ function refreshListsState() {
   document.querySelectorAll(".st").forEach((li) => {
     const id = li.dataset.id;
     const b = li.querySelector(".favBtn");
-    b.textContent = isFav(id) ? "★" : "☆";
-    b.classList.toggle("fav", isFav(id));
+    if (b) { b.textContent = isFav(id) ? "★" : "☆";
+    b.classList.toggle("fav", isFav(id)); }
     li.classList.toggle("playing", current && current.stationuuid === id);
   });
   if (current && $("rFav")) {
@@ -394,13 +394,50 @@ $("searchForm").onsubmit = (e) => {
 };
 
 // ---------- Favoritas ----------
+let favSorting = false;
+function saveFavOrder() { store.set("favs", favs); renderFavs(); }
+function moveFav(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= favs.length) return;
+  [favs[i], favs[j]] = [favs[j], favs[i]];
+  saveFavOrder();
+}
 function renderFavs() {
   const ul = $("favsList");
   ul.innerHTML = "";
-  favs.forEach((st) => ul.append(stationItem(st, favs)));
+  favs.forEach((st, i) => {
+    const li = stationItem(st, favs);
+    if (favSorting) {
+      // En modo ordenar: flechas en lugar de la estrella, y tocar no reproduce
+      li.onclick = null;
+      li.querySelector(".favBtn").remove();
+      const mv = document.createElement("div");
+      mv.className = "moveBtns";
+      mv.innerHTML = `<button aria-label="Subir">▲</button><button aria-label="Bajar">▼</button>`;
+      const [up, down] = mv.querySelectorAll("button");
+      up.disabled = i === 0; down.disabled = i === favs.length - 1;
+      up.onclick = (e) => { e.stopPropagation(); moveFav(i, -1); };
+      down.onclick = (e) => { e.stopPropagation(); moveFav(i, 1); };
+      li.append(mv);
+    }
+    ul.append(li);
+  });
   $("favsEmpty").hidden = favs.length > 0;
+  if (favs.length < 2) favSorting = false;
+  $("favBar").hidden = favs.length < 2;
+  $("favSortBtn").hidden = favSorting;
+  $("favSortTools").hidden = !favSorting;
+  $("favHelp").hidden = !favSorting;
   refreshListsState();
 }
+$("favSortBtn").onclick = () => { favSorting = true; renderFavs(); };
+$("favDone").onclick = () => { favSorting = false; renderFavs(); };
+$("favAZ").onclick = () => { favs.sort((a, b) => a.name.localeCompare(b.name, "es")); saveFavOrder(); };
+$("favMost").onclick = () => {
+  const secs = (s) => (stats.stations[s.stationuuid] || {}).sec || 0;
+  favs.sort((a, b) => secs(b) - secs(a));
+  saveFavOrder();
+};
 
 // ---------- Reproductor ----------
 const audio = $("audio");
@@ -499,7 +536,7 @@ audio.addEventListener("pause", () => {
   }
 });
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.4";
+const APP_VERSION = "1.5";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 

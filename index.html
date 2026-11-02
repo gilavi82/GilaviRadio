@@ -57,6 +57,15 @@
     </section>
 
     <section id="tab-favs" class="tab">
+      <div id="favBar" class="favBar" hidden>
+        <button id="favSortBtn" class="chip">↕ Ordenar</button>
+        <span id="favSortTools" hidden>
+          <button id="favAZ" class="chip">A–Z</button>
+          <button id="favMost" class="chip">Más escuchadas</button>
+          <button id="favDone" class="chip on">Listo</button>
+        </span>
+      </div>
+      <p id="favHelp" class="small" hidden>Usa ▲ y ▼ para mover cada emisora, o elige un orden automático.</p>
       <p id="favsEmpty" class="empty">Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
       <ul id="favsList" class="list"></ul>
     </section>
