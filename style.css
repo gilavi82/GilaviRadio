@@ -12,7 +12,11 @@ html, body { margin: 0; background: var(--bg); color: var(--text); }
 /* Que la página ocupe siempre toda la pantalla: en el iPhone, con listas cortas
    (Favoritas, Buscar) la caja de reproducción se quedaba cortada por abajo */
 html { min-height: 100%; }
-body { min-height: 100vh; min-height: 100dvh; box-sizing: border-box; }
+/* En el iPhone (app de pantalla de inicio), si la página no se puede desplazar, la caja de
+   reproducción se coloca unos 47 px por encima del borde (el alto de la barra de estado).
+   En Populares no pasa porque la lista es larga. Por eso la página siempre es un poco más alta
+   que la pantalla. */
+body { min-height: calc(100vh + env(safe-area-inset-top) + 2px); box-sizing: border-box; }
 body {
   font: 16px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   padding: env(safe-area-inset-top) 0 calc(84px + env(safe-area-inset-bottom));
@@ -68,6 +72,8 @@ button, input, select { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 8px; padding: 5px 10px;
   background: var(--card); line-height: 1.25;
   border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; z-index: 10;
+  /* Si aun así quedara un hueco debajo, se rellena con el color de la caja */
+  box-shadow: 0 120px 0 0 var(--card);
   padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
 }
 .pInfo { flex: 1; min-width: 0; }
