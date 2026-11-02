@@ -12,10 +12,11 @@ html, body { margin: 0; background: var(--bg); color: var(--text); }
 /* La pantalla no se desplaza entera: cabecera, pestañas y filtros quedan fijos,
    solo se mueve la lista de emisoras (.scroll). La caja de reproducción va abajo del todo. */
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+html { height: var(--appH, 100%); }
 body {
   font: 16px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   padding: env(safe-area-inset-top) 0 0; box-sizing: border-box;
-  height: 100vh; height: 100dvh; display: flex; flex-direction: column;
+  height: 100vh; height: 100dvh; height: var(--appH, 100dvh); display: flex; flex-direction: column;
 }
 main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 body:has(#player[hidden]) main { padding-bottom: env(safe-area-inset-bottom); }
@@ -72,8 +73,11 @@ button, input, select { font: inherit; color: inherit; }
   position: relative; flex: none;
   display: flex; align-items: center; gap: 8px; padding: 5px 10px;
   background: var(--card); line-height: 1.25;
-  border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; z-index: 10;
-  padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
+  /* Caja flotante con las cuatro esquinas redondeadas, pegada abajo justo encima de la raya de inicio */
+  border: 1px solid var(--line); border-radius: 18px; z-index: 10;
+  margin: 4px 8px max(6px, calc(env(safe-area-inset-bottom) - 14px));
+  padding: 7px 10px !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.35);
 }
 .pInfo { flex: 1; min-width: 0; }
 .player .icon { padding: 4px 6px; }
