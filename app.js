@@ -735,6 +735,17 @@ function retry(reason) {
   retryTimer = setTimeout(start, delay);
 }
 
+let stallAt = 0;
+function armStall(reason, ms) {
+  clearTimeout(stallTimer);
+  stallAt = audio.currentTime;
+  stallTimer = setTimeout(() => {
+    stallTimer = null;
+    if (!wantPlaying) return;
+    if (!audio.paused && audio.currentTime > stallAt + 0.5) return; // sigue sonando
+    retry(reason);
+  }, ms);
+}
 audio.addEventListener("playing", () => {
   retries = 0; everPlayed = true; clearTimeout(stallTimer);
   setStatus(liveStatus()); setToggle(true);
@@ -743,10 +754,15 @@ audio.addEventListener("playing", () => {
 audio.addEventListener("waiting", () => {
   if (!wantPlaying) return;
   setStatus("Cargando…");
-  clearTimeout(stallTimer);
-  stallTimer = setTimeout(() => retry("Conexión lenta"), 12000);
+  armStall("Conexión lenta", 12000);
 });
-audio.addEventListener("stalled", () => { if (wantPlaying) { clearTimeout(stallTimer); stallTimer = setTimeout(() => retry("Conexión perdida"), 8000); } });
+// Safari lanza "stalled" a menudo en directo aunque el audio siga sonando con lo que tiene guardado.
+// Antes eso reiniciaba la emisora (corte de unos segundos). Ahora solo se reintenta si el audio
+// de verdad se ha parado: si avanza, no tocamos nada.
+audio.addEventListener("stalled", () => { if (wantPlaying) armStall("Conexión perdida", 10000); });
+audio.addEventListener("timeupdate", () => {
+  if (stallTimer && audio.currentTime > stallAt + 0.5) { clearTimeout(stallTimer); stallTimer = null; if (!audio.paused) setStatus(liveStatus()); }
+});
 audio.addEventListener("error", () => { if (wantPlaying && audio.getAttribute("src")) retry("Error de conexión"); });
 audio.addEventListener("ended", () => retry("La emisión se cortó"));
 audio.addEventListener("pause", () => {
@@ -864,7 +880,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.5";
+const APP_VERSION = "3.6";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
