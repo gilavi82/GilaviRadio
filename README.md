@@ -1,4 +1,4 @@
-# GRadio
+# GilaviRadio
 
 App web para iPhone para escuchar miles de radios online, gratis y sin anuncios.
 Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base de datos abierta.
