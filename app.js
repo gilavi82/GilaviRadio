@@ -1133,9 +1133,9 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.5";
+const APP_VERSION = "5.6";
 // ---------- Mapa de emisoras ----------
-// Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es de CARTO (OpenStreetMap, oscuro).
+// Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
 let map = null, mapLayer = null;
 const mapMarkers = new Map();
@@ -1198,9 +1198,10 @@ async function openMap() {
   if (!map) {
     const v = store.get("mapView", { lat: 40.2, lng: -3.7, z: 5 });
     map = L.map("map", { zoomControl: false, worldCopyJump: true }).setView([v.lat, v.lng], v.z);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 18, subdomains: "abcd",
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    // OpenStreetMap: gratis y sin clave. Se oscurece con un filtro CSS para que vaya con la app.
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, className: "darkTiles",
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
     }).addTo(map);
     mapLayer = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, chunkedLoading: true });
     map.addLayer(mapLayer);
