@@ -176,11 +176,10 @@ document.querySelectorAll(".tabs button").forEach((b) => {
   b.onclick = () => {
     document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x === b));
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + b.dataset.tab));
-    store.set("tab", b.dataset.tab);
   };
 });
-const savedTab = store.get("tab", "home");
-document.querySelector(`.tabs button[data-tab="${savedTab}"]`)?.click();
+// Al abrir: Favoritas si tienes alguna; si no, Populares
+document.querySelector(`.tabs button[data-tab="${favs.length ? "favs" : "home"}"]`).click();
 
 // ---------- Populares y búsqueda ----------
 const home = pagedList("homeList", "homeMore");
@@ -318,6 +317,71 @@ audio.addEventListener("pause", () => {
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
   }
 });
+// ---------- Historial de escucha ----------
+const APP_VERSION = "1.1";
+let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
+let listenStart = 0, listenStation = null;
+
+function flushListen() {
+  if (!listenStart || !listenStation) return;
+  const now = Date.now();
+  const sec = Math.round((now - listenStart) / 1000);
+  listenStart = now;
+  if (sec <= 0 || sec > 6 * 3600) return; // descarta valores raros
+  const st = listenStation;
+  stats.totalSec += sec;
+  const e = stats.stations[st.stationuuid] || { name: st.name, cc: st.countrycode || "", sec: 0 };
+  e.name = st.name; e.sec += sec;
+  stats.stations[st.stationuuid] = e;
+  const cc = (st.countrycode || "").toUpperCase() || "??";
+  stats.countries[cc] = (stats.countries[cc] || 0) + sec;
+  store.set("stats", stats);
+}
+function startListen() { flushListen(); listenStation = current; listenStart = Date.now(); }
+function endListen() { flushListen(); listenStart = 0; listenStation = null; }
+
+audio.addEventListener("playing", startListen);
+for (const ev of ["pause", "waiting", "stalled", "error", "ended", "emptied"]) audio.addEventListener(ev, endListen);
+setInterval(flushListen, 15000);
+document.addEventListener("visibilitychange", flushListen);
+window.addEventListener("pagehide", flushListen);
+
+function fmtTime(sec) {
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+  return h ? `${h} h ${m} min` : `${m} min`;
+}
+function renderInfo() {
+  flushListen();
+  const st = Object.values(stats.stations).sort((a, b) => b.sec - a.sec);
+  const co = Object.entries(stats.countries).sort((a, b) => b[1] - a[1]);
+  const hours = stats.totalSec / 3600;
+  $("statHours").textContent = hours >= 10 ? Math.round(hours) + " h" : (Math.round(hours * 10) / 10).toString().replace(".", ",") + " h";
+  $("statStations").textContent = st.length;
+  $("statCountries").textContent = co.filter(([c]) => c !== "??").length;
+  $("statSince").textContent = "Desde el " + new Date(stats.since).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) + ". Total: " + fmtTime(stats.totalSec) + ".";
+  const row = (a, b) => { const li = document.createElement("li"); const x = document.createElement("span"), y = document.createElement("span"); x.textContent = a; y.textContent = b; li.append(x, y); return li; };
+  const ts = $("statTopStations"); ts.innerHTML = "";
+  if (!st.length) ts.append(row("Aún no has escuchado ninguna emisora", ""));
+  st.slice(0, 10).forEach((e) => ts.append(row(e.name, fmtTime(e.sec))));
+  const tc = $("statTopCountries"); tc.innerHTML = "";
+  if (!co.length) tc.append(row("Aún no hay datos", ""));
+  co.forEach(([c, sec]) => {
+    let n = c === "??" ? "Sin país" : c;
+    try { if (c !== "??" && REGION) n = REGION.of(c) || c; } catch {}
+    tc.append(row(n, fmtTime(sec)));
+  });
+  $("appVersion").textContent = APP_VERSION;
+}
+$("infoBtn").onclick = () => { renderInfo(); $("info").hidden = false; };
+$("infoClose").onclick = () => { $("info").hidden = true; };
+$("statReset").onclick = () => {
+  if (!confirm("¿Borrar todo el historial de escucha? Las favoritas no se borran.")) return;
+  stats = { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
+  if (listenStart) listenStart = Date.now();
+  store.set("stats", stats);
+  renderInfo();
+};
+
 window.addEventListener("online", () => { if (wantPlaying) { retries = 0; start(); } });
 
 $("pToggle").onclick = () => (wantPlaying ? stop() : start());

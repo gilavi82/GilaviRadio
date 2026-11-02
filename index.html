@@ -16,13 +16,16 @@
 <body>
   <header class="top">
     <h1>GilaviRadio</h1>
-    <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
+    <div class="topBtns">
+      <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
+      <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
+    </div>
   </header>
 
   <nav class="tabs">
+    <button data-tab="favs">Favoritas</button>
     <button data-tab="home" class="active">Populares</button>
     <button data-tab="search">Buscar</button>
-    <button data-tab="favs">Favoritas</button>
   </nav>
 
   <main>
@@ -60,6 +63,33 @@
     <button id="pFav" class="icon" aria-label="Favorita">☆</button>
     <button id="pToggle" class="icon big" aria-label="Reproducir">▶</button>
   </footer>
+
+  <div id="info" class="sheet" hidden>
+    <div class="sheetHead">
+      <h2>GilaviRadio</h2>
+      <button id="infoClose" class="chip">Cerrar</button>
+    </div>
+
+    <h3>Tu historial de escucha</h3>
+    <div class="statGrid">
+      <div class="stat"><div id="statHours" class="statNum">0 h</div><div class="statLbl">de escucha</div></div>
+      <div class="stat"><div id="statStations" class="statNum">0</div><div class="statLbl">emisoras distintas</div></div>
+      <div class="stat"><div id="statCountries" class="statNum">0</div><div class="statLbl">países</div></div>
+    </div>
+    <p id="statSince" class="small"></p>
+
+    <h3>Emisoras más escuchadas</h3>
+    <ul id="statTopStations" class="rank"></ul>
+
+    <h3>Países</h3>
+    <ul id="statTopCountries" class="rank"></ul>
+
+    <h3>Sobre la app</h3>
+    <p class="small">GilaviRadio es gratis y sin anuncios. Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
+    <p class="small">Tus favoritas y tu historial se guardan solo en este iPhone. Si borras la app de la pantalla de inicio, se pierden.</p>
+    <p class="small">Versión <span id="appVersion"></span></p>
+    <button id="statReset" class="more danger">Borrar historial</button>
+  </div>
 
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>

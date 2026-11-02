@@ -60,3 +60,25 @@ button, input, select { font: inherit; color: inherit; }
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(100px + env(safe-area-inset-bottom));
   background: #000; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 20; max-width: 90%;
 }
+
+.topBtns { display: flex; gap: 8px; align-items: center; }
+.chip.round { width: 34px; height: 34px; padding: 0; font-weight: 700; font-family: Georgia, serif; font-style: italic; }
+
+.sheet {
+  position: fixed; inset: 0; z-index: 30; overflow-y: auto; background: var(--bg);
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+}
+.sheetHead { display: flex; align-items: center; justify-content: space-between; }
+.sheetHead h2 { margin: 0; font-size: 28px; }
+.sheet h3 { margin: 24px 0 10px; font-size: 18px; }
+.statGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; text-align: center; }
+.statNum { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.statLbl { font-size: 12px; color: var(--muted); }
+.small { color: var(--muted); font-size: 14px; }
+.small a { color: var(--accent); }
+.rank { list-style: none; margin: 0; padding: 0; }
+.rank li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.rank li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank li span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+.danger { color: #f87171; }
