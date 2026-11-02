@@ -497,22 +497,43 @@ if ("mediaSession" in navigator) {
 }
 
 // ---------- Temporizador de apagado ----------
-const SLEEP_OPTIONS = [0, 15, 30, 60, 90];
-let sleepIdx = 0, sleepTimer = null, sleepEnd = 0;
-$("sleepBtn").onclick = () => {
-  sleepIdx = (sleepIdx + 1) % SLEEP_OPTIONS.length;
-  const min = SLEEP_OPTIONS[sleepIdx];
-  clearTimeout(sleepTimer);
-  $("sleepBtn").classList.toggle("on", min > 0);
-  if (!min) { $("sleepLabel").textContent = "Apagar"; toast("Temporizador desactivado"); return; }
+// Se comprueba con la hora real cada pocos segundos, para que funcione aunque iOS
+// ralentice la app con la pantalla bloqueada.
+let sleepEnd = 0, sleepTick = null;
+function sleepLeftMin() { return Math.max(0, Math.ceil((sleepEnd - Date.now()) / 60000)); }
+function updateSleepLabel() {
+  const on = sleepEnd > 0;
+  $("sleepBtn").classList.toggle("on", on);
+  $("sleepLabel").textContent = on ? sleepLeftMin() + " min" : "Apagar";
+  $("sleepState").textContent = on ? `Se apagará en ${sleepLeftMin()} min (a las ${new Date(sleepEnd).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}).` : "El temporizador está desactivado.";
+  $("sleepOff").hidden = !on;
+}
+function setSleep(min) {
+  clearInterval(sleepTick);
+  if (!min) { sleepEnd = 0; updateSleepLabel(); toast("Temporizador desactivado"); return; }
   sleepEnd = Date.now() + min * 60000;
-  $("sleepLabel").textContent = min + " min";
+  sleepTick = setInterval(() => {
+    if (Date.now() >= sleepEnd) { clearInterval(sleepTick); sleepEnd = 0; stop(); toast("Temporizador: radio apagada"); }
+    updateSleepLabel();
+  }, 5000);
+  updateSleepLabel();
   toast(`La radio se apagará en ${min} minutos`);
-  sleepTimer = setTimeout(() => {
-    stop(); sleepIdx = 0;
-    $("sleepLabel").textContent = "Apagar"; $("sleepBtn").classList.remove("on");
-  }, min * 60000);
+}
+$("sleepBtn").onclick = () => { updateSleepLabel(); $("sleepSheet").hidden = false; };
+$("sleepClose").onclick = () => { $("sleepSheet").hidden = true; };
+$("sleepSheet").addEventListener("click", (e) => { if (e.target.id === "sleepSheet") $("sleepSheet").hidden = true; });
+document.querySelectorAll("[data-min]").forEach((b) => b.onclick = () => { setSleep(+b.dataset.min); $("sleepSheet").hidden = true; });
+$("sleepOff").onclick = () => { setSleep(0); $("sleepSheet").hidden = true; };
+$("sleepCustomForm").onsubmit = (e) => {
+  e.preventDefault();
+  const min = Math.round(+$("sleepCustom").value);
+  if (!(min >= 1 && min <= 1440)) { toast("Escribe un número de minutos entre 1 y 1440"); return; }
+  store.set("sleepCustom", min);
+  document.activeElement.blur();
+  setSleep(min);
+  $("sleepSheet").hidden = true;
 };
+$("sleepCustom").value = store.get("sleepCustom", "") || "";
 
 // ---------- Arranque ----------
 (async function init() {

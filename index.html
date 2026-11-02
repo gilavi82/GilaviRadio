@@ -99,6 +99,29 @@
     <button id="statReset" class="more danger">Borrar historial</button>
   </div>
 
+  <div id="sleepSheet" class="overlay" hidden>
+    <div class="popup">
+      <div class="sheetHead">
+        <h2>Apagar la radio</h2>
+        <button id="sleepClose" class="chip">Cerrar</button>
+      </div>
+      <p id="sleepState" class="small"></p>
+      <div class="sleepGrid">
+        <button data-min="15">15 min</button>
+        <button data-min="30">30 min</button>
+        <button data-min="45">45 min</button>
+        <button data-min="60">1 hora</button>
+        <button data-min="90">1 h 30</button>
+        <button data-min="120">2 horas</button>
+      </div>
+      <form id="sleepCustomForm" class="sleepCustom">
+        <input id="sleepCustom" type="number" inputmode="numeric" min="1" max="1440" placeholder="Minutos personalizados">
+        <button type="submit" class="primary">Activar</button>
+      </form>
+      <button id="sleepOff" class="more danger" hidden>Desactivar temporizador</button>
+    </div>
+  </div>
+
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 

@@ -92,3 +92,12 @@ button, input, select { font: inherit; color: inherit; }
 .rBtn { display: block; width: 100%; margin-top: 12px; font-size: 18px; padding: 14px; }
 .primary.half { flex: 1 1 40%; }
 .primary.alt { background: var(--card); color: var(--text); border: 1px solid var(--accent); }
+
+.overlay { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; }
+.popup { width: 100%; background: var(--bg); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+.popup h2 { font-size: 22px; margin: 0; }
+.sleepGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+.sleepGrid button { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 0; }
+.sleepCustom { display: flex; gap: 8px; }
+.sleepCustom input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
+.sleepCustom .primary { flex: none; flex-basis: auto; padding: 11px 18px; }
