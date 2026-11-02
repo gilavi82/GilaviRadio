@@ -767,7 +767,19 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.5";
+const APP_VERSION = "2.6";
+// La barra "Editar orden" va fija justo encima de la barra de reproducción
+(() => {
+  const pl = $("player");
+  const place = () => {
+    const h = pl.hidden ? 0 : pl.offsetHeight;
+    document.documentElement.style.setProperty("--playerH", h ? h + "px" : "env(safe-area-inset-bottom)");
+  };
+  if (window.ResizeObserver) new ResizeObserver(place).observe(pl);
+  new MutationObserver(place).observe(pl, { attributes: true, attributeFilter: ["hidden"] });
+  window.addEventListener("resize", place);
+  place();
+})();
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
