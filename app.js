@@ -360,7 +360,11 @@ function updatePickButtons() {
   $("qTagBtn").textContent = pickLabel(selTags, "Cualquier género", (t) => t);
   $("qCountryBtn").classList.toggle("on", selCountries.length > 0);
   $("qTagBtn").classList.toggle("on", selTags.length > 0);
+  $("qCountryClear").hidden = !selCountries.length;
+  $("qTagClear").hidden = !selTags.length;
 }
+$("qCountryClear").onclick = () => { selCountries = []; store.set("selCountries", selCountries); updatePickButtons(); };
+$("qTagClear").onclick = () => { selTags = []; store.set("selTags", selTags); updatePickButtons(); };
 
 let pickKind = "country", pickSel = new Set(), pickOptions = [];
 async function openPicker(kind) {
@@ -947,7 +951,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.1";
+const APP_VERSION = "4.2";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
