@@ -9,18 +9,17 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text); }
-/* Que la página ocupe siempre toda la pantalla: en el iPhone, con listas cortas
-   (Favoritas, Buscar) la caja de reproducción se quedaba cortada por abajo */
-html { min-height: 100%; }
-/* En el iPhone (app de pantalla de inicio), si la página no se puede desplazar, la caja de
-   reproducción se coloca unos 47 px por encima del borde (el alto de la barra de estado).
-   En Populares no pasa porque la lista es larga. Por eso la página siempre es un poco más alta
-   que la pantalla. */
-body { min-height: calc(100vh + env(safe-area-inset-top) + 2px); box-sizing: border-box; }
+/* La pantalla no se desplaza entera: cabecera, pestañas y filtros quedan fijos,
+   solo se mueve la lista de emisoras (.scroll). La caja de reproducción va abajo del todo. */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body {
   font: 16px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  padding: env(safe-area-inset-top) 0 calc(84px + env(safe-area-inset-bottom));
+  padding: env(safe-area-inset-top) 0 0; box-sizing: border-box;
+  height: 100vh; height: 100dvh; display: flex; flex-direction: column;
 }
+main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+body:has(#player[hidden]) main { padding-bottom: env(safe-area-inset-bottom); }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; margin: 0 -16px; padding: 0 16px 8px; }
 button, input, select { font: inherit; color: inherit; }
 .top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 4px; }
 .top h1 { margin: 0; font-size: 28px; display: flex; align-items: center; gap: 8px; }
@@ -38,7 +37,7 @@ button, input, select { font: inherit; color: inherit; }
 .tabs button.active { background: var(--accent); color: #111; font-weight: 600; }
 
 .tab { display: none; padding: 0 16px; }
-.tab.active { display: block; }
+.tab.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
 .filters input, .filters select {
@@ -70,12 +69,10 @@ button, input, select { font: inherit; color: inherit; }
 .empty, .msg { color: var(--muted); text-align: center; padding: 24px 8px; }
 
 .player {
-  position: fixed; left: 0; right: 0; bottom: 0;
+  position: relative; flex: none;
   display: flex; align-items: center; gap: 8px; padding: 5px 10px;
   background: var(--card); line-height: 1.25;
   border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; z-index: 10;
-  /* Si aun así quedara un hueco debajo, se rellena con el color de la caja */
-  box-shadow: 0 120px 0 0 var(--card);
   padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
 }
 .pInfo { flex: 1; min-width: 0; }
@@ -163,9 +160,7 @@ button, input, select { font: inherit; color: inherit; }
 .pickList li.sel .chk { background: var(--accent); border-color: var(--accent); }
 .pickList .pName2 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pickList .pCount { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
-.favBar { position: fixed; left: 0; right: 0; bottom: var(--playerH, env(safe-area-inset-bottom)); z-index: 9;
-  display: flex; justify-content: flex-end; padding: 8px 10px; background: var(--bg); }
-#favsList { padding-bottom: 64px; }
+.favBar { flex: none; display: flex; justify-content: flex-end; padding: 6px 0 8px; }
 #favSortTools { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .dragHandle { flex: none; width: 48px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--muted); touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
 .st.dragging { position: relative; z-index: 5; background: var(--card); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.5); }

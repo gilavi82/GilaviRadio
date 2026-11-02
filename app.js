@@ -663,8 +663,9 @@ function startFavDrag(e, li) {
     }
     // Desplaza la pantalla si arrastras cerca de los bordes
     clearInterval(scrollTimer);
-    const edge = y < 90 ? -8 : y > window.innerHeight - 140 ? 8 : 0;
-    if (edge) scrollTimer = setInterval(() => { window.scrollBy(0, edge); startY -= edge; li.style.transform = `translateY(${y - startY}px)`; }, 16);
+    const sc = ul.closest(".scroll"), box = sc.getBoundingClientRect();
+    const edge = y < box.top + 50 ? -8 : y > box.bottom - 50 ? 8 : 0;
+    if (edge) scrollTimer = setInterval(() => { sc.scrollBy(0, edge); startY -= edge; li.style.transform = `translateY(${y - startY}px)`; }, 16);
   };
   const onUp = () => {
     clearInterval(scrollTimer);
@@ -738,7 +739,7 @@ function renderFolderBar() {
     b.onclick = () => {
       if (id === null) return newFolder();
       if (id && id === curFolder) return editFolder(id); // tocar la carpeta abierta: renombrar o borrar
-      curFolder = id; favSorting = false; renderFavs(); window.scrollTo(0, 0);
+      curFolder = id; favSorting = false; renderFavs(); $("favsList").closest(".scroll").scrollTop = 0;
     };
     bar.append(b);
   };
@@ -1149,7 +1150,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.0";
+const APP_VERSION = "6.1";
 // ---------- Mapa de emisoras ----------
 // Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
