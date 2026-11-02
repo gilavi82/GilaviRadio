@@ -1153,7 +1153,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.6";
+const APP_VERSION = "6.7";
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
   const tab = $("tab-search"), sc = tab.querySelector(".scroll");
@@ -1229,10 +1229,12 @@ async function loadMapArea() {
 }
 async function openMap() {
   $("mapSheet").hidden = false;
+  document.body.classList.add("mapOpen");
   try { await loadLeaflet(); } catch { $("mapHint").textContent = "No se pudo cargar el mapa."; return; }
   if (!map) {
     const v = store.get("mapView", { lat: 40.2, lng: -3.7, z: 5 });
     map = L.map("map", { zoomControl: false, worldCopyJump: true }).setView([v.lat, v.lng], v.z);
+    map.attributionControl.setPosition("topright"); // abajo la tapa el reproductor
     // OpenStreetMap: gratis y sin clave. Se oscurece con un filtro CSS para que vaya con la app.
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, className: "darkTiles",
@@ -1294,7 +1296,7 @@ $("mapQ").addEventListener("input", () => {
 });
 $("mapQClear").onclick = () => { $("mapQ").value = ""; $("mapQClear").hidden = true; $("mapResults").hidden = true; $("mapResults").innerHTML = ""; $("mapQ").focus(); };
 $("mapGo").onclick = () => { document.activeElement.blur(); openMap(); };
-$("mapClose").onclick = () => { $("mapSheet").hidden = true; };
+$("mapClose").onclick = () => { $("mapSheet").hidden = true; document.body.classList.remove("mapOpen"); };
 $("mapLocate").onclick = async () => {
   try { const p = await getPosition(); map && map.setView([p.lat, p.lon], 9); }
   catch { toast("No se pudo saber tu ubicación."); }

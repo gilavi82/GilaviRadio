@@ -128,7 +128,9 @@ button, input, select { font: inherit; color: inherit; }
 .primary.half { flex: 1 1 40%; }
 .primary.full { flex: 1 1 100%; }
 .primary.third { flex: 1 1 28%; min-width: 0; font-size: 14px; padding-left: 4px; padding-right: 4px; white-space: nowrap; }
-.mapSheet { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; bottom: var(--playerH, 0); }
+.mapSheet { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+/* Con el mapa abierto, la caja de reproducción flota encima del mapa (no se corta) */
+body.mapOpen .player { z-index: 40; }
 .mapSheet .small { margin: 6px 0 0; }
 #map { flex: 1; margin: 8px -16px 0; background: #0b1220; }
 .leaflet-container { font: inherit; }
