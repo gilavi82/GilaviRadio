@@ -205,7 +205,8 @@ function countryName(st) {
 }
 function meta(st) {
   const tags = (st.tags || "").split(",").filter(Boolean).slice(0, 2).join(", ");
-  return [countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
+  const dist = st.distKm != null ? "a " + (st.distKm < 1 ? "menos de 1" : Math.round(st.distKm)) + " km" : "";
+  return [dist, countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
 }
 
 function fmtNum(n) {
@@ -456,7 +457,40 @@ async function multiFetch(f, order, limitEach) {
   }
   return out;
 }
+// ---------- Emisoras cerca de mí (100 km) ----------
+const NEAR_KM = 100;
+function distKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * r, dLon = (lon2 - lon1) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * r) * Math.cos(lat2 * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+async function searchNear(near) {
+  const data = await api("stations/search", {
+    hidebroken: "false", has_geo_info: "true", order: "clickcount", reverse: "true", limit: 1000,
+    geo_lat: near.lat.toFixed(4), geo_long: near.lon.toFixed(4), geo_distance: String(NEAR_KM * 1000),
+  });
+  const seen = new Set(), items = [];
+  for (const s of data) {
+    if (!playable(s) || seen.has(s.stationuuid) || s.geo_lat == null || s.geo_long == null) continue;
+    const d = distKm(near.lat, near.lon, Number(s.geo_lat), Number(s.geo_long));
+    if (!(d <= NEAR_KM)) continue;
+    seen.add(s.stationuuid);
+    items.push({ ...slim(s), distKm: d });
+  }
+  items.sort((x, y) => x.distKm - y.distKm);
+  return { items, full: false };
+}
+function getPosition() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error("nogeo"));
+    navigator.geolocation.getCurrentPosition(
+      (p) => res({ lat: p.coords.latitude, lon: p.coords.longitude }),
+      (e) => rej(e), { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 });
+  });
+}
 async function searchMulti(f, offset) {
+  if (f.near) return offset > 0 ? { items: [], full: false } : searchNear(f.near);
   const cb = combos(f);
   if (cb.length === 1) return searchStations(cb[0], offset);
   if (offset > 0) return { items: [], full: false };
@@ -511,6 +545,23 @@ async function loadFilters() {
 $("homeCountry").onchange = (e) => {
   store.set("homeCountry", e.target.value);
   home.search(e.target.value ? { countrycode: e.target.value } : {});
+};
+$("nearGo").onclick = async () => {
+  document.activeElement.blur();
+  $("rCard").hidden = true;
+  const ul = $("searchList");
+  ul.innerHTML = `<li class="msg">Buscando tu ubicación…</li>`;
+  $("searchMore").hidden = true;
+  let near;
+  try { near = await getPosition(); } catch (e) {
+    ul.innerHTML = `<li class="msg">${e && e.code === 1
+      ? "No tengo permiso para ver tu ubicación. Actívalo en Ajustes → Privacidad y seguridad → Localización → Sitios web de Safari."
+      : "No se pudo saber tu ubicación. Inténtalo de nuevo."}</li>`;
+    return;
+  }
+  await results.search({ near });
+  if (!ul.querySelector(".st")) ul.innerHTML = `<li class="msg">No hay emisoras con ubicación a menos de ${NEAR_KM} km de ti en Radio Browser.</li>`;
+  else toast("Emisoras a menos de " + NEAR_KM + " km, de la más cercana a la más lejana");
 };
 $("searchForm").onsubmit = (e) => {
   e.preventDefault();
@@ -813,7 +864,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.4";
+const APP_VERSION = "3.5";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
