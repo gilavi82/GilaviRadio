@@ -767,7 +767,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.6";
+const APP_VERSION = "2.7";
 // La barra "Editar orden" va fija justo encima de la barra de reproducción
 (() => {
   const pl = $("player");
