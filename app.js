@@ -1108,7 +1108,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1372,8 +1372,9 @@ function fmtTime(sec) {
 }
 function renderInfo() {
   flushListen();
-  const st = Object.values(stats.stations).sort((a, b) => b.sec - a.sec);
-  const co = Object.entries(stats.countries).sort((a, b) => b[1] - a[1]);
+  // Lo escuchado menos de 1 minuto no se muestra
+  const st = Object.values(stats.stations).filter((e) => e.sec >= 60).sort((a, b) => b.sec - a.sec);
+  const co = Object.entries(stats.countries).filter(([, sec]) => sec >= 60).sort((a, b) => b[1] - a[1]);
   const hours = stats.totalSec / 3600;
   $("statHours").textContent = hours >= 10 ? Math.round(hours) + " h" : (Math.round(hours * 10) / 10).toString().replace(".", ",") + " h";
   $("statStations").textContent = st.length;
