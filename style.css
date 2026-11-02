@@ -50,7 +50,7 @@ button, input, select { font: inherit; color: inherit; }
 .player {
   position: fixed; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom));
   display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-  background: rgba(30, 41, 59, .96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  background: var(--card);
   border: 1px solid var(--line); border-radius: 16px; z-index: 10;
 }
 .pInfo { flex: 1; min-width: 0; }
@@ -93,11 +93,13 @@ button, input, select { font: inherit; color: inherit; }
 .primary.half { flex: 1 1 40%; }
 .primary.alt { background: var(--card); color: var(--text); border: 1px solid var(--accent); }
 
-.overlay { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.55); display: flex; align-items: flex-end; }
-.popup { width: 100%; background: var(--bg); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
-.popup h2 { font-size: 22px; margin: 0; }
+
 .sleepGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
 .sleepGrid button { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 0; }
 .sleepCustom { display: flex; gap: 8px; }
 .sleepCustom input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
 .sleepCustom .primary { flex: none; flex-basis: auto; padding: 11px 18px; }
+#sleepSheet h2 { font-size: 26px; }
+.refreshBtn { display: block; width: 100%; margin-top: 16px; padding: 13px; }
+.updateBar { position: fixed; left: 8px; right: 8px; top: calc(env(safe-area-inset-top) + 8px); z-index: 25; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--accent); border-radius: 12px; padding: 8px 8px 8px 14px; }
+.updateBar .primary { flex: none; flex-basis: auto; padding: 8px 14px; }

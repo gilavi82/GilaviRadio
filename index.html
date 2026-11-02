@@ -96,11 +96,12 @@
     <p class="small">GilaviRadio es gratis y sin anuncios. Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
     <p class="small">Tus favoritas y tu historial se guardan solo en este iPhone. Si borras la app de la pantalla de inicio, se pierden.</p>
     <p class="small">Versión <span id="appVersion"></span></p>
+    <button id="appRefresh" class="primary refreshBtn">↻ Actualizar la app</button>
     <button id="statReset" class="more danger">Borrar historial</button>
   </div>
 
-  <div id="sleepSheet" class="overlay" hidden>
-    <div class="popup">
+  <div id="sleepSheet" class="sheet" hidden>
+    <div>
       <div class="sheetHead">
         <h2>Apagar la radio</h2>
         <button id="sleepClose" class="chip">Cerrar</button>
@@ -120,6 +121,11 @@
       </form>
       <button id="sleepOff" class="more danger" hidden>Desactivar temporizador</button>
     </div>
+  </div>
+
+  <div id="updateBar" class="updateBar" hidden>
+    <span>Hay una versión nueva</span>
+    <button id="updateNow" class="primary">Actualizar</button>
   </div>
 
   <audio id="audio" preload="none"></audio>

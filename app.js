@@ -338,7 +338,7 @@ audio.addEventListener("pause", () => {
   }
 });
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.1";
+const APP_VERSION = "1.3";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
@@ -394,6 +394,29 @@ function renderInfo() {
 }
 $("infoBtn").onclick = () => { renderInfo(); $("info").hidden = false; };
 $("infoClose").onclick = () => { $("info").hidden = true; };
+// ---------- Actualizar la app ----------
+// iOS no recarga las web apps al volver a abrirlas: borramos la caché y recargamos a mano.
+async function refreshApp() {
+  toast("Actualizando…");
+  try {
+    if ("caches" in window) for (const k of await caches.keys()) await caches.delete(k);
+    if ("serviceWorker" in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.update().catch(() => {});
+  } catch {}
+  location.replace(location.pathname + "?v=" + Date.now());
+}
+$("appRefresh").onclick = refreshApp;
+$("updateNow").onclick = refreshApp;
+// Al volver a la app, mira si hay una versión nueva publicada y ofrece actualizar
+async function checkUpdate() {
+  try {
+    const res = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+    const { version } = await res.json();
+    $("updateBar").hidden = !version || version === APP_VERSION;
+  } catch {}
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkUpdate(); });
+checkUpdate();
+
 $("statReset").onclick = () => {
   if (!confirm("¿Borrar todo el historial de escucha? Las favoritas no se borran.")) return;
   stats = { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
@@ -521,7 +544,6 @@ function setSleep(min) {
 }
 $("sleepBtn").onclick = () => { updateSleepLabel(); $("sleepSheet").hidden = false; };
 $("sleepClose").onclick = () => { $("sleepSheet").hidden = true; };
-$("sleepSheet").addEventListener("click", (e) => { if (e.target.id === "sleepSheet") $("sleepSheet").hidden = true; });
 document.querySelectorAll("[data-min]").forEach((b) => b.onclick = () => { setSleep(+b.dataset.min); $("sleepSheet").hidden = true; });
 $("sleepOff").onclick = () => { setSleep(0); $("sleepSheet").hidden = true; };
 $("sleepCustomForm").onsubmit = (e) => {
