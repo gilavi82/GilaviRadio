@@ -1153,7 +1153,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.9";
+const APP_VERSION = "7.0";
 // ---------- Compartir emisora ----------
 // El enlace lleva el identificador de la emisora: https://…/GilaviRadio/?emisora=<id>
 function shareUrl(st) {
@@ -1225,8 +1225,9 @@ function addMapStations(list) {
     const lat = Number(s.geo_lat), lon = Number(s.geo_long);
     if (!isFinite(lat) || !isFinite(lon) || (lat === 0 && lon === 0) || mapMarkers.has(s.stationuuid) || !playable(s)) continue;
     const st = slim(s);
-    const m = L.circleMarker([lat, lon], { radius: 9, color: "#0f172a", weight: 2, fillColor: "#fb923c", fillOpacity: 0.95, st });
-    m.on("click", () => showMapList([st], m.getLatLng()));
+    const m = L.circleMarker([lat, lon], { radius: 9, color: "#0f172a", weight: 2, fillColor: "#fb923c", fillOpacity: 0.95, st, bubblingMouseEvents: false });
+    // bubblingMouseEvents: false → el toque no llega al mapa (que cerraría la lista al instante)
+    m.on("click", (e) => { if (e.originalEvent) L.DomEvent.stop(e.originalEvent); showMapList([st], m.getLatLng()); });
     mapMarkers.set(st.stationuuid, m);
     mapStations.push(st);
     mapLayer.addLayer(m);
