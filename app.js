@@ -349,10 +349,10 @@ function renderRecent() {
     ul.append(li);
   });
   $("recentEmpty").hidden = recent.length > 0;
-  $("recentClear").hidden = !recent.length;
+  $("recentBar").hidden = !recent.length;
   refreshListsState();
 }
-$("recentClear").onclick = () => { recent = []; store.set("recent", recent); renderRecent(); };
+$("recentClear").onclick = () => { if (!confirm("¿Borrar todas las emisoras recientes?")) return; recent = []; store.set("recent", recent); renderRecent(); };
 document.querySelector('.tabs button[data-tab="recent"]').addEventListener("click", renderRecent);
 setTimeout(renderRecent, 0); // cuando ya esté listo el reproductor
 
@@ -1086,7 +1086,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "7.4";
+const APP_VERSION = "7.5";
 
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
