@@ -116,9 +116,10 @@ function setLogo(img, st) {
 // Wikidata es la base de datos abierta de Wikipedia. Tiene el logo oficial de las emisoras
 // conocidas. Buscamos por nombre y solo aceptamos resultados descritos como radio/emisora.
 const WD_API = "https://www.wikidata.org/w/api.php";
-const wdCache = (() => { try { return JSON.parse(localStorage.getItem("wdLogos") || "{}"); } catch { return {}; } })();
+try { localStorage.removeItem("wdLogos"); } catch {}
+const wdCache = (() => { try { return JSON.parse(localStorage.getItem("wdLogos2") || "{}"); } catch { return {}; } })();
 let wdSaveTimer = null;
-function wdSave() { clearTimeout(wdSaveTimer); wdSaveTimer = setTimeout(() => { try { localStorage.setItem("wdLogos", JSON.stringify(wdCache)); } catch {} }, 1000); }
+function wdSave() { clearTimeout(wdSaveTimer); wdSaveTimer = setTimeout(() => { try { localStorage.setItem("wdLogos2", JSON.stringify(wdCache)); } catch {} }, 1000); }
 const wdQueue = [];
 let wdActive = 0;
 function wdRun(task) {
@@ -177,11 +178,6 @@ async function wikidataLogo(st) {
   const key = cc + "|" + full;
   if (key in wdCache) return wdCache[key];
   let url = await wdRun(() => wdFindLogo(full, cc));
-  // Si no aparece, probamos con las dos primeras palabras (p. ej. "COPE Almería" → "COPE")
-  const words = full.split(" ");
-  const generic = /^(radio|r[aá]dio|la|el|los|las|the|fm|emisora|online|onda|super|top)$/i;
-  if (!url && url !== null && words.length > 2) url = await wdRun(() => wdFindLogo(words.slice(0, 2).join(" "), cc));
-  if (!url && url !== null && words.length >= 2 && words[0].length >= 3 && !generic.test(words[0])) url = await wdRun(() => wdFindLogo(words[0], cc));
   if (url === null) return ""; // fallo de red: no lo guardamos para reintentar otro día
   wdCache[key] = url || "";
   wdSave();
@@ -771,7 +767,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.3";
+const APP_VERSION = "2.4";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
