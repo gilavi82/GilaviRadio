@@ -115,7 +115,7 @@ button, input, select { font: inherit; color: inherit; }
 .small a { color: var(--accent); }
 .rank { list-style: none; margin: 0; padding: 0; }
 .rank li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
-.rank li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank li span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rank li span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
 .danger { color: #f87171; }
 
@@ -232,3 +232,7 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 #relSortBar { flex: none; padding: 0 0 8px; }
 #relScroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -16px; padding: 0 16px calc(env(safe-area-inset-bottom) + 24px); }
 #relTop { bottom: calc(env(safe-area-inset-bottom) + 12px); }
+.rank li.playable { cursor: pointer; }
+.rank li.playable span:first-child { color: var(--text, inherit); }
+.rank li.playable:active { background: var(--card); }
+.rankLogo { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; background: #fff; flex: none; align-self: center; margin-right: -4px; }

@@ -1108,7 +1108,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.5";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1351,7 +1351,7 @@ function flushListen() {
   const st = listenStation;
   stats.totalSec += sec;
   const e = stats.stations[st.stationuuid] || { name: st.name, cc: st.countrycode || "", sec: 0 };
-  e.name = st.name; e.sec += sec;
+  e.name = st.name; e.sec += sec; e.favicon = st.favicon || ""; e.cc = st.countrycode || e.cc || "";
   stats.stations[st.stationuuid] = e;
   const cc = (st.countrycode || "").toUpperCase() || "??";
   stats.countries[cc] = (stats.countries[cc] || 0) + sec;
@@ -1373,7 +1373,7 @@ function fmtTime(sec) {
 function renderInfo() {
   flushListen();
   // Lo escuchado menos de 1 minuto no se muestra
-  const st = Object.values(stats.stations).filter((e) => e.sec >= 60).sort((a, b) => b.sec - a.sec);
+  const st = Object.entries(stats.stations).map(([id, e]) => ({ ...e, id })).filter((e) => e.sec >= 60).sort((a, b) => b.sec - a.sec);
   const co = Object.entries(stats.countries).filter(([, sec]) => sec >= 60).sort((a, b) => b[1] - a[1]);
   const hours = stats.totalSec / 3600;
   $("statHours").textContent = hours >= 10 ? Math.round(hours) + " h" : (Math.round(hours * 10) / 10).toString().replace(".", ",") + " h";
@@ -1383,15 +1383,36 @@ function renderInfo() {
   const row = (a, b) => { const li = document.createElement("li"); const x = document.createElement("span"), y = document.createElement("span"); x.textContent = a; y.textContent = b; li.append(x, y); return li; };
   const ts = $("statTopStations"); ts.innerHTML = "";
   if (!st.length) ts.append(row("Aún no has escuchado ninguna emisora", ""));
-  st.slice(0, 10).forEach((e) => ts.append(row(e.name, fmtTime(e.sec))));
+  st.slice(0, 10).forEach((e) => {
+    // Tocar una emisora del historial la pone a sonar
+    const li = row(e.name, fmtTime(e.sec));
+    li.classList.add("playable");
+    const known = [current, ...favs, ...recent].find((x) => x && x.stationuuid === e.id);
+    const img = document.createElement("img");
+    img.className = "rankLogo"; img.alt = "";
+    setLogo(img, known || { stationuuid: e.id, name: e.name, favicon: e.favicon || "", countrycode: e.cc || "" });
+    li.prepend(img);
+    li.onclick = () => playFromHistory(e.id);
+    ts.append(li);
+  });
   const tc = $("statTopCountries"); tc.innerHTML = "";
   if (!co.length) tc.append(row("Aún no hay datos", ""));
-  co.forEach(([c, sec]) => {
+  co.slice(0, 10).forEach(([c, sec]) => {
     let n = c === "??" ? "Sin país" : c;
     try { if (c !== "??" && REGION) n = REGION.of(c) || c; } catch {}
     tc.append(row(n, fmtTime(sec)));
   });
   $("appVersion").textContent = APP_VERSION;
+}
+async function playFromHistory(id) {
+  let st = [current, ...favs, ...recent].find((x) => x && x.stationuuid === id);
+  if (!st) {
+    toast("Cargando emisora…");
+    try { const r = await api("stations/byuuid/" + id); if (r && r[0] && playable(r[0])) st = slim(r[0]); } catch {}
+  }
+  if (!st) { toast("No he podido cargar esa emisora"); return; }
+  $("info").hidden = true;
+  play(st, [st]);
 }
 $("infoBtn").onclick = () => { renderInfo(); $("info").hidden = false; };
 $("infoClose").onclick = () => { $("info").hidden = true; };
