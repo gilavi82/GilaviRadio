@@ -691,6 +691,16 @@ function renderFavs() {
   const shown = listSort && !favSorting ? sortItems(inFolder.slice()) : inFolder;
   shown.forEach((st, i) => {
     const li = stationItem(st, shown);
+    if (st.lastcheckok === 0 || st.lastcheckok === "0") {
+      const w = document.createElement("div");
+      w.className = "stDown";
+      const since = st.lastcheckoktime ? new Date(st.lastcheckoktime.endsWith("Z") ? st.lastcheckoktime : st.lastcheckoktime.replace(" ", "T") + "Z") : null;
+      const days = since && !isNaN(since) ? Math.floor((Date.now() - since) / 86400000) : null;
+      w.textContent = "⚠️ Caída según Radio Browser" + (days == null ? "" : days < 1 ? " · funcionaba hoy" : days === 1 ? " · funcionaba ayer" : ` · no funciona desde hace ${days} días`);
+      const main = li.querySelector(".stMain");
+      if (main) main.append(w);
+      li.classList.add("down");
+    }
     if (favSorting) {
       // En modo ordenar: asa para arrastrar en lugar de la estrella, y tocar no reproduce
       li.onclick = null;
@@ -1133,7 +1143,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.6";
+const APP_VERSION = "5.7";
 // ---------- Mapa de emisoras ----------
 // Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
@@ -1241,6 +1251,8 @@ async function refreshFavStats() {
     const d = fresh[f.stationuuid];
     if (!d) continue;
     f.votes = d.votes || 0; f.clickcount = d.clickcount || 0; f.clicktrend = d.clicktrend || 0;
+    // Comprobación de Radio Browser: 1 = funcionaba en su última prueba, 0 = falló
+    f.lastcheckok = d.lastcheckok; f.lastcheckoktime = d.lastcheckoktime_iso || d.lastcheckoktime || "";
     changed = true;
   }
   if (current && fresh[current.stationuuid]) {
