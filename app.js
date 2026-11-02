@@ -947,7 +947,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.9";
+const APP_VERSION = "4.0";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
@@ -1169,16 +1169,27 @@ function updateMediaSession() {
     album: "GilaviRadio",
     artwork: [{ src: art, sizes: "128x128" }],
   });
+  setupMediaButtons();
 }
-if ("mediaSession" in navigator) {
+// Pantalla bloqueada: anterior / siguiente en vez de ±10 s.
+// iOS pone los botones de ±10 s si existen los de avanzar/retroceder, así que los quitamos
+// explícitamente, y lo repetimos cada vez que empieza a sonar (Safari los vuelve a poner).
+function setupMediaButtons() {
+  if (!("mediaSession" in navigator)) return;
   const ms = navigator.mediaSession;
   const set = (a, h) => { try { ms.setActionHandler(a, h); } catch {} };
+  set("seekbackward", null);
+  set("seekforward", null);
+  set("seekto", null);
   set("play", () => start());
   set("pause", () => stop());
   set("stop", () => stop());
   set("nexttrack", () => step(1));
   set("previoustrack", () => step(-1));
 }
+setupMediaButtons();
+audio.addEventListener("playing", setupMediaButtons);
+audio.addEventListener("loadedmetadata", setupMediaButtons);
 
 // ---------- Temporizador de apagado ----------
 // Se comprueba con la hora real cada pocos segundos, para que funcione aunque iOS
