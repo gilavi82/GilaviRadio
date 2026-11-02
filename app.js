@@ -536,7 +536,7 @@ audio.addEventListener("pause", () => {
   }
 });
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.6";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
@@ -594,11 +594,23 @@ $("infoBtn").onclick = () => { renderInfo(); $("info").hidden = false; };
 $("infoClose").onclick = () => { $("info").hidden = true; };
 // ---------- Actualizar la app ----------
 // iOS no recarga las web apps al volver a abrirlas: borramos la caché y recargamos a mano.
+// Cada paso tiene un tiempo máximo, para que el botón nunca se quede "colgado".
+const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(r, ms))]);
 async function refreshApp() {
   toast("Actualizando…");
   try {
-    if ("caches" in window) for (const k of await caches.keys()) await caches.delete(k);
-    if ("serviceWorker" in navigator) for (const r of await navigator.serviceWorker.getRegistrations()) await r.update().catch(() => {});
+    // 1) Descarga de nuevo los archivos saltándose la memoria del navegador
+    const files = ["./", "index.html", "style.css", "app.js", "sw.js", "version.json", "manifest.webmanifest"];
+    await withTimeout(Promise.all(files.map((f) => fetch(f, { cache: "reload" }).catch(() => {}))), 8000);
+    // 2) Quita el service worker y su caché; se vuelven a instalar al recargar
+    if ("serviceWorker" in navigator) {
+      const regs = await withTimeout(navigator.serviceWorker.getRegistrations(), 3000) || [];
+      await withTimeout(Promise.all(regs.map((r) => r.unregister())), 3000);
+    }
+    if ("caches" in window) {
+      const keys = await withTimeout(caches.keys(), 3000) || [];
+      await withTimeout(Promise.all(keys.map((k) => caches.delete(k))), 3000);
+    }
   } catch {}
   location.replace(location.pathname + "?v=" + Date.now());
 }

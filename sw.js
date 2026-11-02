@@ -1,5 +1,5 @@
 // Guarda la interfaz de la app para que abra rápido. Las emisoras y la API siempre van por red.
-const CACHE = "gilaviradio-v16";
+const CACHE = "gilaviradio-v17";
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
@@ -15,10 +15,11 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   // Red primero (para recibir actualizaciones), caché si no hay conexión
   e.respondWith(
-    fetch(e.request).then((res) => {
+    // "no-cache": pregunta siempre al servidor si hay versión nueva (no usa la memoria del navegador)
+    fetch(e.request.url, { cache: "no-cache", credentials: "same-origin" }).then((res) => {
       const copy = res.clone();
       caches.open(CACHE).then((c) => c.put(e.request, copy));
       return res;
-    }).catch(() => caches.match(e.request))
+    }).catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
 });
