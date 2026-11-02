@@ -228,3 +228,7 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 .top h1 { min-width: 0; font-size: 26px; gap: 7px; }
 .top { gap: 8px; }
 .hdrVer { flex: none; }
+#stPaneRel:not([hidden]) { display: flex; flex-direction: column; overflow: hidden; position: relative; padding-bottom: 0; }
+#relSortBar { flex: none; padding: 0 0 8px; }
+#relScroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -16px; padding: 0 16px calc(env(safe-area-inset-bottom) + 24px); }
+#relTop { bottom: calc(env(safe-area-inset-bottom) + 12px); }

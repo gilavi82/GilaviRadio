@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.1">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.2">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=1.0.1">
+  <link rel="stylesheet" href="style.css?v=1.0.2">
   <script>
     // En la app de pantalla de inicio del iPhone, el alto que da el navegador a veces no incluye
     // la zona de la hora (unos 47 px) y la app se queda corta por abajo. Usamos el alto real de la pantalla.
@@ -35,7 +35,7 @@
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=1.0.1" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
+    <h1><img src="icons/logo.svg?v=1.0.2" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -192,8 +192,17 @@
     <p class="small">Algunas emisoras no tienen todos los datos rellenos.</p>
     </div>
     <div id="stPaneRel">
+      <div id="relSortBar" class="sortBar">
+        <span>Ordenar por</span>
+        <button data-sort="votes">Votos</button>
+        <button data-sort="clickcount">Escuchas</button>
+        <button data-sort="clicktrend">Tendencia</button>
+      </div>
+      <div id="relScroll">
       <p class="small">Primero otras de la misma cadena y después del mismo género, empezando por las del mismo país.</p>
       <ul id="stRelated" class="list"></ul>
+      </div>
+      <button id="relTop" class="toTop" hidden aria-label="Volver arriba">↑</button>
     </div>
 
   </div>
@@ -249,7 +258,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=1.0.1"></script>
-  <script src="app.js?v=1.0.1"></script>
+  <script src="tz.js?v=1.0.2"></script>
+  <script src="app.js?v=1.0.2"></script>
 </body>
 </html>

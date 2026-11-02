@@ -974,7 +974,7 @@ function showStTab(which) {
   document.querySelectorAll(".stTabs button").forEach((b) => b.classList.toggle("active", b.dataset.st === which));
   $("stPaneInfo").hidden = which !== "info";
   $("stPaneRel").hidden = which !== "rel";
-  $("stPaneInfo").scrollTop = 0; $("stPaneRel").scrollTop = 0;
+  $("stPaneInfo").scrollTop = 0; $("relScroll").scrollTop = 0; $("relTop").hidden = true;
 }
 document.querySelectorAll(".stTabs button").forEach((b) => { b.onclick = () => showStTab(b.dataset.st); });
 
@@ -1024,13 +1024,28 @@ async function showRelated(st) {
   if (stShown !== st) return;
   ul.innerHTML = "";
   if (!list.length) { ul.innerHTML = `<li class="msg">No he encontrado emisoras relacionadas.</li>`; return; }
+  relList = list;
+  renderRelated();
+}
+// Relacionadas: orden propio (sin elegir = primero la misma cadena, luego género y país)
+let relList = [], relSort = "";
+function renderRelated() {
+  const ul = $("stRelated");
+  const list = relSort ? relList.slice().sort((a, b) => (Number(b[relSort]) || 0) - (Number(a[relSort]) || 0)) : relList;
+  ul.innerHTML = "";
   for (const r of list) {
     const li = stationItem(r, list);
     li.onclick = () => { $("stSheet").hidden = true; play(r, list); };
     ul.append(li);
   }
+  document.querySelectorAll("#relSortBar button").forEach((b) => b.classList.toggle("on", b.dataset.sort === relSort));
   refreshListsState();
 }
+document.querySelectorAll("#relSortBar button").forEach((b) => {
+  b.onclick = () => { relSort = relSort === b.dataset.sort ? "" : b.dataset.sort; renderRelated(); $("relScroll").scrollTop = 0; };
+});
+$("relScroll").addEventListener("scroll", () => { $("relTop").hidden = $("relScroll").scrollTop <= 600; });
+$("relTop").onclick = () => $("relScroll").scrollTo({ top: 0, behavior: "smooth" });
 
 // ---------- Logo propio desde Google ----------
 // Enlace normal (no window.open): en la app de pantalla de inicio del iPhone window.open puede no hacer nada
@@ -1093,7 +1108,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
