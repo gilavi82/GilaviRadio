@@ -836,6 +836,7 @@ let stShown = null;
 async function openStationInfo(st) {
   if (!st) return;
   stShown = st;
+  $("stGoogle").href = googleLogoUrl(st);
   $("stLogoReset").hidden = !myLogos[st.stationuuid];
   $("stSheet").hidden = false;
   $("stName").textContent = st.name;
@@ -886,11 +887,10 @@ async function openStationInfo(st) {
 $("stClose").onclick = () => { $("stSheet").hidden = true; };
 
 // ---------- Logo propio desde Google ----------
-$("stGoogle").onclick = () => {
-  if (!stShown) return;
-  const q = 'logo cuadrado "' + stShown.name + '"';
-  window.open("https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(q), "_blank", "noopener");
-};
+// Enlace normal (no window.open): en la app de pantalla de inicio del iPhone window.open puede no hacer nada
+function googleLogoUrl(st) {
+  return "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent('logo cuadrado "' + st.name + '"');
+}
 function blobToLogo(blob) {
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(blob);
@@ -947,7 +947,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.8";
+const APP_VERSION = "3.9";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");

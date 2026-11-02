@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.8">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.9">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=3.8">
+  <link rel="stylesheet" href="style.css?v=3.9">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=3.8" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=3.9" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -138,7 +138,7 @@
     </div>
     <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div></div>
     <div class="logoTools">
-      <button id="stGoogle" class="chip">🔎 Buscar logo en Google</button>
+      <a id="stGoogle" class="chip linkChip" href="https://www.google.com/" target="_blank" rel="noopener">🔎 Buscar logo en Google</a>
       <button id="stPaste" class="chip">📋 Pegar logo</button>
       <button id="stLogoReset" class="chip" hidden>Quitar mi logo</button>
     </div>
@@ -178,7 +178,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=3.8"></script>
-  <script src="app.js?v=3.8"></script>
+  <script src="tz.js?v=3.9"></script>
+  <script src="app.js?v=3.9"></script>
 </body>
 </html>
