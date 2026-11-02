@@ -1108,7 +1108,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.5";
+const APP_VERSION = "1.0.6";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1340,14 +1340,16 @@ setTimeout(refreshFavStats, 1500);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(relayout, 100); });
 })();
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
-let listenStart = 0, listenStation = null;
+let listenStart = 0, listenStation = null, listenMin = 0;
 
+// Suma por minutos completos: cada escucha cuenta solo cuando llega a 1 minuto, y luego minuto a minuto
 function flushListen() {
   if (!listenStart || !listenStation) return;
-  const now = Date.now();
-  const sec = Math.round((now - listenStart) / 1000);
-  listenStart = now;
-  if (sec <= 0 || sec > 6 * 3600) return; // descarta valores raros
+  const total = Math.floor((Date.now() - listenStart) / 60000);
+  const add = Math.min(total, 24 * 60) - listenMin; // descarta valores raros
+  if (add <= 0) return;
+  listenMin += add;
+  const sec = add * 60;
   const st = listenStation;
   stats.totalSec += sec;
   const e = stats.stations[st.stationuuid] || { name: st.name, cc: st.countrycode || "", sec: 0 };
@@ -1357,11 +1359,14 @@ function flushListen() {
   stats.countries[cc] = (stats.countries[cc] || 0) + sec;
   store.set("stats", stats);
 }
-function startListen() { flushListen(); listenStation = current; listenStart = Date.now(); }
-function endListen() { flushListen(); listenStart = 0; listenStation = null; }
+function startListen() {
+  // Si solo se ha cortado un momento (cargando) y es la misma emisora, sigue la misma escucha
+  if (listenStart && listenStation === current) return;
+  flushListen(); listenStation = current; listenStart = Date.now(); listenMin = 0; }
+function endListen() { flushListen(); listenStart = 0; listenStation = null; listenMin = 0; }
 
 audio.addEventListener("playing", startListen);
-for (const ev of ["pause", "waiting", "stalled", "error", "ended", "emptied"]) audio.addEventListener(ev, endListen);
+for (const ev of ["pause", "error", "ended", "emptied"]) audio.addEventListener(ev, endListen);
 setInterval(flushListen, 15000);
 document.addEventListener("visibilitychange", flushListen);
 window.addEventListener("pagehide", flushListen);
