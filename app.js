@@ -43,11 +43,14 @@ function slim(s) {
     httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
     tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls,
+    maybeBroken: s.lastcheckok === 0,
   };
 }
 async function searchStations(params, offset) {
   const data = await api("stations/search", {
-    hidebroken: "true", order: "clickcount", reverse: "true",
+    // Al buscar por nombre mostramos también las que Radio Browser marca como caídas:
+    // sus comprobaciones se hacen desde fuera de España y a veces fallan con emisoras locales.
+    hidebroken: params.name ? "false" : "true", order: "clickcount", reverse: "true",
     limit: 60, offset, ...params,
   });
   return { items: data.filter(playable).map(slim), full: data.length === 60 };
@@ -114,7 +117,7 @@ function countryName(st) {
 }
 function meta(st) {
   const tags = (st.tags || "").split(",").filter(Boolean).slice(0, 2).join(", ");
-  return [countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
+  return [st.maybeBroken ? "⚠ puede no funcionar" : "", countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
 }
 
 function stationItem(st, list) {
