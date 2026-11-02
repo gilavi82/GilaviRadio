@@ -12,7 +12,7 @@ Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base
 
 ## Funciones
 - Emisoras populares por país y búsqueda por nombre, país y género.
-- Favoritas guardadas en el propio iPhone, que puedes ordenar (a mano, A–Z o por más escuchadas).
+- Favoritas guardadas en el propio iPhone, que puedes ordenar arrastrando (o A–Z / más escuchadas).
 - Sigue sonando con la pantalla bloqueada, con controles en la pantalla de bloqueo.
 - Reconexión automática y temporizador de apagado.
 - Buscar con varios países y varios géneros; al elegir unos, la lista de los otros se ajusta.

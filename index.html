@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#0f172a">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=1.6">
+  <link rel="stylesheet" href="style.css?v=1.7">
 </head>
 <body>
   <header class="top">
@@ -58,14 +58,15 @@
 
     <section id="tab-favs" class="tab">
       <div id="favBar" class="favBar" hidden>
-        <button id="favSortBtn" class="chip">↕ Ordenar</button>
+        <button id="favSortBtn" class="chip">↕ Editar orden</button>
         <span id="favSortTools" hidden>
           <button id="favAZ" class="chip">A–Z</button>
           <button id="favMost" class="chip">Más escuchadas</button>
-          <button id="favDone" class="chip on">Listo</button>
+          <button id="favCancel" class="chip">Cancelar</button>
+          <button id="favDone" class="chip on">Guardar</button>
         </span>
       </div>
-      <p id="favHelp" class="small" hidden>Usa ▲ y ▼ para mover cada emisora, o elige un orden automático.</p>
+      <p id="favHelp" class="small" hidden>Mantén el dedo en ≡ y arrastra cada emisora a su sitio (o usa A–Z / Más escuchadas). Después pulsa Guardar.</p>
       <p id="favsEmpty" class="empty">Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
       <ul id="favsList" class="list"></ul>
     </section>
@@ -151,6 +152,6 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="app.js?v=1.6"></script>
+  <script src="app.js?v=1.7"></script>
 </body>
 </html>

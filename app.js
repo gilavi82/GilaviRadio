@@ -395,12 +395,50 @@ $("searchForm").onsubmit = (e) => {
 
 // ---------- Favoritas ----------
 let favSorting = false;
-function saveFavOrder() { store.set("favs", favs); renderFavs(); }
-function moveFav(i, dir) {
-  const j = i + dir;
-  if (j < 0 || j >= favs.length) return;
-  [favs[i], favs[j]] = [favs[j], favs[i]];
-  saveFavOrder();
+// Mientras editas el orden, los cambios no se guardan hasta pulsar Guardar
+let favSnapshot = null;
+function saveFavOrder() { if (!favSorting) store.set("favs", favs); renderFavs(); }
+// Arrastrar y soltar: se coge la emisora por el asa ≡ y se mueve arriba o abajo
+function startFavDrag(e, li) {
+  e.preventDefault();
+  const ul = $("favsList");
+  const handle = e.currentTarget;
+  let startY = e.clientY;
+  li.classList.add("dragging");
+  try { handle.setPointerCapture(e.pointerId); } catch {}
+  let scrollTimer = null;
+  const onMove = (ev) => {
+    ev.preventDefault();
+    const y = ev.clientY;
+    li.style.transform = `translateY(${y - startY}px)`;
+    const prev = li.previousElementSibling, next = li.nextElementSibling;
+    if (prev) {
+      const r = prev.getBoundingClientRect();
+      if (y < r.top + r.height / 2) { ul.insertBefore(li, prev); startY -= r.height; li.style.transform = `translateY(${y - startY}px)`; }
+    }
+    if (next) {
+      const r = next.getBoundingClientRect();
+      if (y > r.top + r.height / 2) { ul.insertBefore(next, li); startY += r.height; li.style.transform = `translateY(${y - startY}px)`; }
+    }
+    // Desplaza la pantalla si arrastras cerca de los bordes
+    clearInterval(scrollTimer);
+    const edge = y < 90 ? -8 : y > window.innerHeight - 140 ? 8 : 0;
+    if (edge) scrollTimer = setInterval(() => { window.scrollBy(0, edge); startY -= edge; li.style.transform = `translateY(${y - startY}px)`; }, 16);
+  };
+  const onUp = () => {
+    clearInterval(scrollTimer);
+    handle.removeEventListener("pointermove", onMove);
+    handle.removeEventListener("pointerup", onUp);
+    handle.removeEventListener("pointercancel", onUp);
+    li.classList.remove("dragging");
+    li.style.transform = "";
+    const order = [...ul.children].map((x) => x.dataset.id);
+    favs.sort((a, b) => order.indexOf(a.stationuuid) - order.indexOf(b.stationuuid));
+    saveFavOrder();
+  };
+  handle.addEventListener("pointermove", onMove);
+  handle.addEventListener("pointerup", onUp);
+  handle.addEventListener("pointercancel", onUp);
 }
 function renderFavs() {
   const ul = $("favsList");
@@ -408,17 +446,15 @@ function renderFavs() {
   favs.forEach((st, i) => {
     const li = stationItem(st, favs);
     if (favSorting) {
-      // En modo ordenar: flechas en lugar de la estrella, y tocar no reproduce
+      // En modo ordenar: asa para arrastrar en lugar de la estrella, y tocar no reproduce
       li.onclick = null;
       li.querySelector(".favBtn").remove();
-      const mv = document.createElement("div");
-      mv.className = "moveBtns";
-      mv.innerHTML = `<button aria-label="Subir">▲</button><button aria-label="Bajar">▼</button>`;
-      const [up, down] = mv.querySelectorAll("button");
-      up.disabled = i === 0; down.disabled = i === favs.length - 1;
-      up.onclick = (e) => { e.stopPropagation(); moveFav(i, -1); };
-      down.onclick = (e) => { e.stopPropagation(); moveFav(i, 1); };
-      li.append(mv);
+      const h = document.createElement("div");
+      h.className = "dragHandle";
+      h.setAttribute("aria-label", "Arrastrar para mover");
+      h.textContent = "≡";
+      h.addEventListener("pointerdown", (e) => startFavDrag(e, li));
+      li.append(h);
     }
     ul.append(li);
   });
@@ -428,10 +464,12 @@ function renderFavs() {
   $("favSortBtn").hidden = favSorting;
   $("favSortTools").hidden = !favSorting;
   $("favHelp").hidden = !favSorting;
+  ul.classList.toggle("sorting", favSorting);
   refreshListsState();
 }
-$("favSortBtn").onclick = () => { favSorting = true; renderFavs(); };
-$("favDone").onclick = () => { favSorting = false; renderFavs(); };
+$("favSortBtn").onclick = () => { favSnapshot = favs.slice(); favSorting = true; renderFavs(); };
+$("favDone").onclick = () => { favSorting = false; favSnapshot = null; store.set("favs", favs); renderFavs(); toast("Orden guardado"); };
+$("favCancel").onclick = () => { if (favSnapshot) favs = favSnapshot; favSnapshot = null; favSorting = false; renderFavs(); };
 $("favAZ").onclick = () => { favs.sort((a, b) => a.name.localeCompare(b.name, "es")); saveFavOrder(); };
 $("favMost").onclick = () => {
   const secs = (s) => (stats.stations[s.stationuuid] || {}).sec || 0;
@@ -536,7 +574,7 @@ audio.addEventListener("pause", () => {
   }
 });
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.7";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
