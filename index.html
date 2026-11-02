@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#0f172a">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=1.8">
+  <link rel="stylesheet" href="style.css?v=1.9">
 </head>
 <body>
   <header class="top">
@@ -121,6 +121,16 @@
     <button id="pickClear" class="more">Quitar selección</button>
   </div>
 
+  <div id="stSheet" class="sheet" hidden>
+    <div class="sheetHead">
+      <h2>Ficha de la emisora</h2>
+      <button id="stClose" class="chip">Cerrar</button>
+    </div>
+    <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div></div>
+    <ul id="stInfo" class="kv"></ul>
+    <p class="small">Datos de Radio Browser. Algunas emisoras no tienen todos los campos rellenos.</p>
+  </div>
+
   <div id="sleepSheet" class="sheet" hidden>
     <div>
       <div class="sheetHead">
@@ -152,7 +162,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=1.8"></script>
-  <script src="app.js?v=1.8"></script>
+  <script src="tz.js?v=1.9"></script>
+  <script src="app.js?v=1.9"></script>
 </body>
 </html>

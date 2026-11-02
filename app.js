@@ -622,8 +622,67 @@ setInterval(() => {
   if (wantPlaying && current && !audio.paused && audio.readyState > 2) setStatus(liveStatus());
 }, 20000);
 
+// ---------- Ficha de la emisora (toda la información de Radio Browser) ----------
+function fmtDate(s) {
+  if (!s) return "";
+  const d = new Date(s.endsWith("Z") ? s : s.replace(" ", "T") + "Z");
+  return isNaN(d) ? s : d.toLocaleString("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+async function openStationInfo(st) {
+  if (!st) return;
+  $("stSheet").hidden = false;
+  $("stName").textContent = st.name;
+  setLogo($("stLogo"), st);
+  const ul = $("stInfo");
+  ul.innerHTML = `<li><span class="v">Cargando…</span></li>`;
+  let d = st;
+  try { const r = await api("stations/byuuid/" + st.stationuuid); if (r && r[0]) d = r[0]; } catch {}
+  const yes = (v) => (v === 1 || v === true || v === "1" ? "Sí" : v === 0 || v === false || v === "0" ? "No" : "");
+  const z = stationTz(d);
+  const rows = [
+    ["Hora local", stationLocalTime(d).replace("🕐 ", "")],
+    ["País", countryName(d)],
+    ["Región / provincia", d.state],
+    ["Idioma", d.language],
+    ["Géneros / etiquetas", (d.tags || "").split(",").filter(Boolean).join(", ")],
+    ["Página web", d.homepage ? { link: d.homepage } : ""],
+    ["Formato", d.codec],
+    ["Calidad", d.bitrate ? d.bitrate + " kbps" : ""],
+    ["Emisión HLS", yes(d.hls)],
+    ["Dirección del directo", d.url_resolved || d.url ? { link: d.url_resolved || d.url } : ""],
+    ["Error de seguridad (SSL)", d.ssl_error ? "Sí" : d.ssl_error === 0 ? "No" : ""],
+    ["Funcionaba en la última comprobación", yes(d.lastcheckok)],
+    ["Última comprobación", fmtDate(d.lastchecktime_iso8601 || d.lastchecktime)],
+    ["Último funcionamiento correcto", fmtDate(d.lastcheckoktime_iso8601 || d.lastcheckoktime)],
+    ["Último cambio de datos", fmtDate(d.lastchangetime_iso8601 || d.lastchangetime)],
+    ["Clics (popularidad)", d.clickcount != null ? String(d.clickcount) : ""],
+    ["Tendencia de clics", d.clicktrend != null ? (d.clicktrend > 0 ? "▲ +" : d.clicktrend < 0 ? "▼ " : "") + d.clicktrend : ""],
+    ["Votos", d.votes != null ? String(d.votes) : ""],
+    ["Zona horaria", z ? z.tz : ""],
+    ["Coordenadas", isFinite(parseFloat(d.geo_lat)) && isFinite(parseFloat(d.geo_long)) ? { link: `https://www.openstreetmap.org/?mlat=${d.geo_lat}&mlon=${d.geo_long}#map=8/${d.geo_lat}/${d.geo_long}`, text: `${(+d.geo_lat).toFixed(3)}, ${(+d.geo_long).toFixed(3)} (ver mapa)` } : ""],
+    ["Identificador", d.stationuuid],
+  ];
+  ul.innerHTML = "";
+  for (const [k, v] of rows) {
+    if (!v) continue;
+    const li = document.createElement("li");
+    const a = document.createElement("span"); a.className = "k"; a.textContent = k;
+    const b = document.createElement("span"); b.className = "v";
+    if (typeof v === "object" && /^https?:\/\//i.test(v.link)) {
+      const link = document.createElement("a");
+      link.href = v.link; link.target = "_blank"; link.rel = "noopener"; link.textContent = v.text || v.link;
+      b.append(link);
+    } else b.textContent = typeof v === "object" ? v.text || v.link : v;
+    li.append(a, b); ul.append(li);
+  }
+}
+$("stClose").onclick = () => { $("stSheet").hidden = true; };
+$("pLogo").addEventListener("click", () => openStationInfo(current));
+document.querySelector(".pInfo").addEventListener("click", () => openStationInfo(current));
+$("rLogo").addEventListener("click", () => openStationInfo(current));
+
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.8";
+const APP_VERSION = "1.9";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
