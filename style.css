@@ -106,7 +106,7 @@ button, input, select { font: inherit; color: inherit; }
 .rFav { position: absolute; top: 8px; right: 8px; font-size: 26px; }
 .rBtn { display: block; width: 100%; margin-top: 12px; font-size: 18px; padding: 14px; }
 .primary.half { flex: 1 1 40%; }
-.nearBtn { flex: 1 1 100%; }
+.primary.full { flex: 1 1 100%; }
 .primary.alt { background: var(--card); color: var(--text); border: 1px solid var(--accent); }
 
 

@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.6">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.7">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=3.6">
+  <link rel="stylesheet" href="style.css?v=3.7">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=3.6" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=3.7" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -50,9 +50,9 @@
         <div class="qWrap"><input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off"><button type="button" id="qClear" class="qClear" aria-label="Borrar" hidden>✕</button></div>
         <button type="button" id="qCountryBtn" class="pickBtn">Cualquier país</button>
         <button type="button" id="qTagBtn" class="pickBtn">Cualquier género</button>
-        <button type="submit" class="primary half">Buscar</button>
+        <button type="submit" class="primary full">Buscar</button>
         <button type="button" id="rGo" class="primary half alt">🎲 Aleatoria</button>
-        <button type="button" id="nearGo" class="primary alt nearBtn">📍 Cerca de mí (100 km)</button>
+        <button type="button" id="nearGo" class="primary half alt">📍 Cerca de mí</button>
       </form>
       <div id="rCard" class="rCard" hidden>
         <img id="rLogo" class="rLogo" alt="" src="icons/icon-192.png">
@@ -172,7 +172,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=3.6"></script>
-  <script src="app.js?v=3.6"></script>
+  <script src="tz.js?v=3.7"></script>
+  <script src="app.js?v=3.7"></script>
 </body>
 </html>
