@@ -1149,7 +1149,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.9";
+const APP_VERSION = "6.0";
 // ---------- Mapa de emisoras ----------
 // Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
