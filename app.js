@@ -1153,7 +1153,41 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.8";
+const APP_VERSION = "6.9";
+// ---------- Compartir emisora ----------
+// El enlace lleva el identificador de la emisora: https://…/GilaviRadio/?emisora=<id>
+function shareUrl(st) {
+  return new URL("./?emisora=" + encodeURIComponent(st.stationuuid), location.href.split("?")[0]).href;
+}
+$("stShare").onclick = async () => {
+  const st = stShown;
+  if (!st) return;
+  const url = shareUrl(st);
+  const text = "Escucha " + st.name + " en GilaviRadio";
+  try {
+    if (navigator.share) { await navigator.share({ title: st.name, text, url }); return; }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(text + ": " + url); toast("Enlace copiado"); }
+  catch { prompt("Copia este enlace:", url); }
+};
+// Si la app se abre desde un enlace compartido, prepara esa emisora en el reproductor
+async function openSharedStation() {
+  const id = new URLSearchParams(location.search).get("emisora");
+  if (!id) return;
+  history.replaceState(null, "", location.pathname);
+  try {
+    const r = await api("stations/byuuid/" + encodeURIComponent(id));
+    if (!r || !r[0] || !playable(r[0])) { toast("No he encontrado la emisora compartida"); return; }
+    const st = slim(r[0]);
+    current = st; queue = [st];
+    $("player").hidden = false;
+    $("pName").textContent = st.name;
+    setPop(st); setLogo($("pLogo"), st);
+    setStatus("Te han compartido esta emisora. Pulsa ▶");
+    updateMediaSession(); refreshListsState();
+    toast("Emisora compartida: " + st.name + ". Pulsa ▶ para escucharla");
+  } catch { toast("No se pudo cargar la emisora compartida"); }
+}
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
   const tab = $("tab-search"), sc = tab.querySelector(".scroll");
@@ -1676,6 +1710,7 @@ $("sleepCustom").value = store.get("sleepCustom", "") || "";
     updateMediaSession();
     refreshListsState();
   }
+  openSharedStation();
   await loadFilters();
   const code = $("homeCountry").value;
   home.search(code ? { countrycode: code } : {});

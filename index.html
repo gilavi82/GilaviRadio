@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=6.8">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=6.9">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=6.8">
+  <link rel="stylesheet" href="style.css?v=6.9">
   <script>
     // En la app de pantalla de inicio del iPhone, el alto que da el navegador a veces no incluye
     // la zona de la hora (unos 47 px) y la app se queda corta por abajo. Usamos el alto real de la pantalla.
@@ -35,7 +35,7 @@
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=6.8" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=6.9" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -176,7 +176,7 @@
       <h2>Ficha de la emisora</h2>
       <button id="stClose" class="chip">Cerrar</button>
     </div>
-    <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div></div>
+    <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div><button id="stShare" class="chip shareBtn" aria-label="Compartir">📤 Compartir</button></div>
     <label id="stFolderRow" class="stFolderRow" hidden>📁 Carpeta <select id="stFolder"></select></label>
     <nav class="stTabs">
       <button data-st="rel" class="active">Relacionadas</button>
@@ -250,7 +250,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=6.8"></script>
-  <script src="app.js?v=6.8"></script>
+  <script src="tz.js?v=6.9"></script>
+  <script src="app.js?v=6.9"></script>
 </body>
 </html>

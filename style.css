@@ -218,3 +218,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
 .mapListHead b { flex: 1; }
 #mapListUl { overflow-y: auto; padding: 0 12px; margin: 0; overscroll-behavior: contain; }
 body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-bottom)); }
+
+.stHead .n { flex: 1; min-width: 0; }
+.shareBtn { flex: none; align-self: center; }
