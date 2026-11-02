@@ -1153,7 +1153,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.4";
+const APP_VERSION = "6.5";
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
   const tab = $("tab-search"), sc = tab.querySelector(".scroll");
@@ -1248,7 +1248,40 @@ async function openMap() {
     loadMapArea();
   }
   setTimeout(() => map.invalidateSize(), 50);
+  // Siempre empieza en tu posición actual (si das permiso); si no, donde lo dejaste
+  getPosition().then((p) => { if (!$("mapSheet").hidden) map.setView([p.lat, p.lon], 9); }).catch(() => {});
 }
+// Buscador de lugares (OpenStreetMap Nominatim: gratis y sin clave)
+$("mapSearch").onsubmit = async (e) => {
+  e.preventDefault();
+  const q = $("mapQ").value.trim(), ul = $("mapResults");
+  if (!q) return;
+  $("mapQ").blur();
+  ul.hidden = false;
+  ul.innerHTML = "<li>Buscando…</li>";
+  try {
+    const res = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams({ q, format: "json", limit: "6", "accept-language": "es" }));
+    const list = await res.json();
+    ul.innerHTML = "";
+    if (!list.length) { ul.innerHTML = "<li>No he encontrado ese lugar.</li>"; return; }
+    for (const r of list) {
+      const li = document.createElement("li");
+      const parts = (r.display_name || "").split(", ");
+      li.innerHTML = "<span></span><small></small>";
+      li.children[0].textContent = parts[0];
+      li.children[1].textContent = parts.slice(1).join(", ");
+      li.onclick = () => {
+        ul.hidden = true;
+        const bb = r.boundingbox && r.boundingbox.map(Number);
+        if (bb && bb.length === 4) map.fitBounds([[bb[0], bb[2]], [bb[1], bb[3]]], { maxZoom: 11 });
+        else map.setView([Number(r.lat), Number(r.lon)], 10);
+      };
+      ul.append(li);
+    }
+  } catch { ul.innerHTML = "<li>No se pudo buscar. Revisa tu conexión.</li>"; }
+};
+$("mapQ").addEventListener("input", () => { $("mapQClear").hidden = !$("mapQ").value; if (!$("mapQ").value) $("mapResults").hidden = true; });
+$("mapQClear").onclick = () => { $("mapQ").value = ""; $("mapQClear").hidden = true; $("mapResults").hidden = true; $("mapQ").focus(); };
 $("mapGo").onclick = () => { document.activeElement.blur(); openMap(); };
 $("mapClose").onclick = () => { $("mapSheet").hidden = true; };
 $("mapLocate").onclick = async () => {

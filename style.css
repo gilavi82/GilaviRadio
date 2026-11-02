@@ -200,3 +200,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
 .searchShow .sum { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .searchShow .chg { color: var(--accent); font-weight: 600; font-size: 14px; flex: none; }
 #tab-search.folded #searchForm { display: none; }
+
+.mapSearch { position: relative; margin-top: 10px; display: flex; }
+.mapSearch input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 44px 10px 12px; color: var(--text); -webkit-appearance: none; appearance: none; font-size: 16px; }
+.mapSearch input::-webkit-search-cancel-button { display: none; }
+.mapResults { position: absolute; z-index: 1001; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 0; list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: 10px; max-height: 50vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.mapResults li { padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.mapResults li:last-child { border-bottom: 0; }
+.mapResults li small { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
