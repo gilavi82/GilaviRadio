@@ -320,6 +320,39 @@ document.querySelectorAll(".tabs button").forEach((b) => {
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + b.dataset.tab));
   };
 });
+// ---------- Recientes: las 10 últimas emisoras escuchadas ----------
+let recent = store.get("recent", []);
+function addRecent(st) {
+  recent = [{ ...st, playedAt: Date.now() }, ...recent.filter((r) => r.stationuuid !== st.stationuuid)].slice(0, 10);
+  store.set("recent", recent);
+  renderRecent();
+}
+function agoText(ms) {
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return "Ahora mismo";
+  if (m < 60) return "Hace " + m + " min";
+  const h = Math.round(m / 60);
+  if (h < 24) return "Hace " + h + " h";
+  const d = Math.round(h / 24);
+  return d === 1 ? "Ayer" : "Hace " + d + " días";
+}
+function renderRecent() {
+  const ul = $("recentList");
+  ul.innerHTML = "";
+  recent.forEach((st) => {
+    const li = stationItem(st, recent);
+    const m = li.querySelector(".stMeta");
+    if (m && st.playedAt) m.textContent = agoText(st.playedAt) + " · " + m.textContent;
+    ul.append(li);
+  });
+  $("recentEmpty").hidden = recent.length > 0;
+  $("recentClear").hidden = !recent.length;
+  refreshListsState();
+}
+$("recentClear").onclick = () => { recent = []; store.set("recent", recent); renderRecent(); };
+document.querySelector('.tabs button[data-tab="recent"]').addEventListener("click", renderRecent);
+setTimeout(renderRecent, 0); // cuando ya esté listo el reproductor
+
 // Al abrir: Favoritas si tienes alguna; si no, Populares
 document.querySelector(`.tabs button[data-tab="${favs.length ? "favs" : "home"}"]`).click();
 
@@ -702,6 +735,7 @@ function play(st, list, fromRandom) {
   current = st;
   queue = list && list.length ? list : [st];
   store.set("last", st);
+  addRecent(st);
   retries = 0; everPlayed = false;
   $("player").hidden = false;
   $("pName").textContent = st.name;
@@ -1028,7 +1062,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.2";
+const APP_VERSION = "5.3";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");

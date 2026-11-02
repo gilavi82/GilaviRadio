@@ -34,7 +34,7 @@ button, input, select { font: inherit; color: inherit; }
 .sortBar span { margin-right: 2px; }
 .sortBar button { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; color: var(--muted); }
 .sortBar button.on { background: var(--card); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-.tabs button { flex: 1; background: var(--card); border: 0; border-radius: 10px; padding: 10px 0; color: var(--muted); }
+.tabs button { flex: 1; min-width: 0; background: var(--card); border: 0; border-radius: 10px; padding: 10px 0; color: var(--muted); font-size: 15px; }
 .tabs button.active { background: var(--accent); color: #111; font-weight: 600; }
 
 .tab { display: none; padding: 0 16px; }

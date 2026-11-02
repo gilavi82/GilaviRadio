@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.2">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.3">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=5.2">
+  <link rel="stylesheet" href="style.css?v=5.3">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=5.2" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=5.3" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -25,6 +25,7 @@
   <div class="stickyTop">
   <nav class="tabs">
     <button data-tab="favs">Favoritas</button>
+    <button data-tab="recent">Recientes</button>
     <button data-tab="home" class="active">Populares</button>
     <button data-tab="search">Buscar</button>
   </nav>
@@ -63,6 +64,12 @@
       </div>
       <ul id="searchList" class="list"></ul>
       <button id="searchMore" class="more" hidden>Cargar más</button>
+    </section>
+
+    <section id="tab-recent" class="tab">
+      <p id="recentEmpty" class="empty">Aquí aparecerán las últimas 10 emisoras que escuches.</p>
+      <ul id="recentList" class="list"></ul>
+      <button id="recentClear" class="more" hidden>Borrar recientes</button>
     </section>
 
     <section id="tab-favs" class="tab">
@@ -190,7 +197,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=5.2"></script>
-  <script src="app.js?v=5.2"></script>
+  <script src="tz.js?v=5.3"></script>
+  <script src="app.js?v=5.3"></script>
 </body>
 </html>
