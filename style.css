@@ -57,6 +57,8 @@ button, input, select { font: inherit; color: inherit; }
 }
 .pInfo { flex: 1; min-width: 0; }
 .pName { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trendUp { color: #22c55e; font-weight: 600; }
+.trendDown { color: #ef4444; font-weight: 600; }
 .pPop { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pStatus { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 

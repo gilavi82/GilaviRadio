@@ -211,12 +211,16 @@ function fmtNum(n) {
   return n.toLocaleString("es-ES");
 }
 // Indicadores de popularidad de Radio Browser: votos, escuchas (clics) y tendencia de escuchas
-function popText(st, short) {
-  if (st.votes == null && st.clickcount == null) return "";
+function fillPop(el, st) {
+  el.textContent = "";
+  if (st.votes == null && st.clickcount == null) return false;
   const t = Number(st.clicktrend) || 0;
-  const trend = t > 0 ? "▲ +" + fmtNum(t) : t < 0 ? "▼ −" + fmtNum(-t) : "= 0";
-  return short ? "👍 " + fmtNum(st.votes) + " · 🎧 " + fmtNum(st.clickcount) + " · " + trend
-    : "👍 " + fmtNum(st.votes) + " votos · 🎧 " + fmtNum(st.clickcount) + " escuchas · " + trend;
+  el.append(fmtNum(st.votes) + " votos · " + fmtNum(st.clickcount) + " escuchas · ");
+  const tr = document.createElement("span");
+  tr.className = t > 0 ? "trendUp" : t < 0 ? "trendDown" : "";
+  tr.textContent = t > 0 ? "▲ +" + fmtNum(t) : t < 0 ? "▼ −" + fmtNum(-t) : "= 0";
+  el.append(tr);
+  return true;
 }
 function stationItem(st, list) {
   const li = document.createElement("li");
@@ -230,8 +234,7 @@ function stationItem(st, list) {
   main.innerHTML = `<div class="stName"></div><div class="stMeta"></div><div class="stPop"></div>`;
   main.children[0].textContent = st.name;
   main.children[1].textContent = meta(st);
-  const pop = popText(st);
-  if (pop) main.children[2].textContent = pop; else main.children[2].remove();
+  if (!fillPop(main.children[2], st)) main.children[2].remove();
   const fav = document.createElement("button");
   fav.className = "icon favBtn";
   fav.setAttribute("aria-label", "Favorita");
@@ -594,9 +597,7 @@ function setToggle(playing) { $("pToggle").textContent = playing ? "❚❚" : "�
 
 let randomMode = false;
 function setPop(st) {
-  const t = popText(st, true);
-  $("pPop").textContent = t;
-  $("pPop").hidden = !t;
+  $("pPop").hidden = !fillPop($("pPop"), st);
 }
 function play(st, list, fromRandom) {
   randomMode = !!fromRandom;
@@ -789,7 +790,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.9";
+const APP_VERSION = "3.0";
 // Actualiza votos/escuchas/tendencia de las favoritas (los datos guardados se quedan viejos)
 async function refreshFavStats() {
   if (!favs.length) return;
@@ -940,7 +941,9 @@ function filtersText(f) {
 function showRandomCard(st) {
   $("rCard").hidden = false;
   $("rName").textContent = st.name;
-  $("rMeta").textContent = [meta(st), popText(st)].filter(Boolean).join("\n") || " ";
+  $("rMeta").textContent = meta(st) || " ";
+  const rp = document.createElement("div");
+  if (fillPop(rp, st)) $("rMeta").append(rp);
   setLogo($("rLogo"), st);
   refreshListsState();
 }
