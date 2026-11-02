@@ -15,5 +15,6 @@ Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base
 - Favoritas guardadas en el propio iPhone.
 - Sigue sonando con la pantalla bloqueada, con controles en la pantalla de bloqueo.
 - Reconexión automática y temporizador de apagado.
-- Botón Aleatoria dentro de Buscar: emisora al azar con los filtros de país y género, con botón Siguiente.
+- Buscar con varios países y varios géneros; al elegir unos, la lista de los otros se ajusta.
+- Botón Aleatoria dentro de Buscar: emisora al azar con esos filtros, con botón Siguiente.
 - Pantalla de información con historial: horas de escucha, emisoras y países.

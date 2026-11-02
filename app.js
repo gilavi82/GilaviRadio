@@ -42,7 +42,7 @@ function slim(s) {
     url_resolved: s.url_resolved.replace(/^http:\/\//i, "https://"),
     httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
-    tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls,
+    tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls, clickcount: s.clickcount || 0,
     badCodec: BAD_CODECS.some((c) => (s.codec || "").toUpperCase().includes(c)),
   };
 }
@@ -157,14 +157,14 @@ function refreshListsState() {
 }
 
 // Lista paginada reutilizable
-function pagedList(ulId, moreId) {
+function pagedList(ulId, moreId, loader = searchStations) {
   const ul = $(ulId), more = $(moreId);
   const state = { params: null, offset: 0, items: [] };
   async function load(reset) {
     if (reset) { state.offset = 0; state.items = []; ul.innerHTML = `<li class="msg">Cargando…</li>`; }
     more.hidden = true;
     try {
-      const { items, full } = await searchStations(state.params, state.offset);
+      const { items, full } = await loader(state.params, state.offset);
       if (reset) ul.innerHTML = "";
       state.offset += 60;
       state.items.push(...items);
@@ -190,16 +190,178 @@ document.querySelectorAll(".tabs button").forEach((b) => {
 // Al abrir: Favoritas si tienes alguna; si no, Populares
 document.querySelector(`.tabs button[data-tab="${favs.length ? "favs" : "home"}"]`).click();
 
+// ---------- Filtros múltiples de Buscar (países y géneros) ----------
+// Puedes elegir varios países y varios géneros. Al elegir países, la lista de géneros
+// muestra solo los que hay en esos países (y al revés). Radio Browser no da ese cruce,
+// así que lo calculamos con una muestra de las emisoras más escuchadas de cada país/género.
+let allCountries = [], allTags = [];
+let selCountries = store.get("selCountries", []);
+let selTags = store.get("selTags", []);
+const SAMPLE = 1500;
+const sampleCache = {};
+function countryLabel(code) {
+  const c = allCountries.find((x) => x.code === code);
+  if (c) return c.name;
+  try { return (REGION && REGION.of(code)) || code; } catch { return code; }
+}
+async function sample(params) {
+  const key = JSON.stringify(params);
+  if (!sampleCache[key]) {
+    sampleCache[key] = api("stations/search", { hidebroken: "false", order: "clickcount", reverse: "true", limit: SAMPLE, ...params })
+      .catch((e) => { delete sampleCache[key]; throw e; });
+  }
+  return sampleCache[key];
+}
+async function tagFacet(countries) {
+  const counts = new Map();
+  const lists = await Promise.all(countries.map((c) => sample({ countrycode: c })));
+  for (const list of lists) for (const st of list) {
+    for (let t of (st.tags || "").split(",")) { t = t.trim().toLowerCase(); if (t) counts.set(t, (counts.get(t) || 0) + 1); }
+  }
+  return counts;
+}
+async function countryFacet(tags) {
+  const counts = new Map();
+  const lists = await Promise.all(tags.map((t) => sample({ tag: t, tagExact: "true" })));
+  const seen = new Set();
+  for (const list of lists) for (const st of list) {
+    const cc = (st.countrycode || "").toUpperCase();
+    if (!cc || seen.has(st.stationuuid)) continue;
+    seen.add(st.stationuuid);
+    counts.set(cc, (counts.get(cc) || 0) + 1);
+  }
+  return counts;
+}
+function pickLabel(list, empty, fmt) {
+  if (!list.length) return empty;
+  return list.length === 1 ? fmt(list[0]) : `${fmt(list[0])} +${list.length - 1}`;
+}
+function updatePickButtons() {
+  $("qCountryBtn").textContent = pickLabel(selCountries, "Cualquier país", countryLabel);
+  $("qTagBtn").textContent = pickLabel(selTags, "Cualquier género", (t) => t);
+  $("qCountryBtn").classList.toggle("on", selCountries.length > 0);
+  $("qTagBtn").classList.toggle("on", selTags.length > 0);
+}
+
+let pickKind = "country", pickSel = new Set(), pickOptions = [];
+async function openPicker(kind) {
+  pickKind = kind;
+  pickSel = new Set(kind === "country" ? selCountries : selTags);
+  $("pickTitle").textContent = kind === "country" ? "Países" : "Géneros";
+  $("pickFilter").value = "";
+  $("picker").hidden = false;
+  const other = kind === "country" ? selTags : selCountries;
+  pickOptions = [];
+  if (other.length) {
+    $("pickHint").textContent = "Cargando…";
+    $("pickList").innerHTML = "";
+    try {
+      if (kind === "country") {
+        const counts = await countryFacet(other);
+        pickOptions = [...counts].map(([code, n]) => ({ id: code, name: countryLabel(code), count: n }))
+          .sort((a, b) => a.name.localeCompare(b.name, "es"));
+      } else {
+        const counts = await tagFacet(other);
+        pickOptions = [...counts].map(([t, n]) => ({ id: t, name: t, count: n })).sort((a, b) => b.count - a.count);
+      }
+      $("pickHint").textContent = kind === "country"
+        ? `Solo países con emisoras de: ${other.join(", ")}.`
+        : `Solo géneros que hay en: ${other.map(countryLabel).join(", ")} (los más comunes primero).`;
+    } catch {
+      $("pickHint").textContent = "No se pudo cargar la lista ajustada; se muestran todos.";
+    }
+  } else {
+    $("pickHint").textContent = kind === "country" ? "Puedes marcar varios países." : "Puedes marcar varios géneros.";
+  }
+  if (!pickOptions.length) {
+    pickOptions = kind === "country"
+      ? allCountries.map((c) => ({ id: c.code, name: c.name, count: c.count }))
+      : allTags.map((t) => ({ id: t.name, name: t.name, count: t.count }));
+  }
+  // Lo ya marcado siempre aparece, aunque no esté en la lista ajustada
+  for (const id of pickSel) if (!pickOptions.some((o) => o.id === id)) {
+    pickOptions.unshift({ id, name: kind === "country" ? countryLabel(id) : id, count: 0 });
+  }
+  renderPicker();
+}
+function renderPicker() {
+  const q = $("pickFilter").value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const ul = $("pickList");
+  ul.innerHTML = "";
+  const opts = pickOptions.filter((o) => !q || o.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q));
+  // Los marcados arriba
+  opts.sort((a, b) => (pickSel.has(b.id) ? 1 : 0) - (pickSel.has(a.id) ? 1 : 0));
+  for (const o of opts.slice(0, 400)) {
+    const li = document.createElement("li");
+    li.classList.toggle("sel", pickSel.has(o.id));
+    li.innerHTML = `<span class="chk"></span><span class="pName2"></span><span class="pCount"></span>`;
+    li.querySelector(".chk").textContent = pickSel.has(o.id) ? "✓" : "";
+    li.querySelector(".pName2").textContent = o.name;
+    li.querySelector(".pCount").textContent = o.count ? o.count : "";
+    li.onclick = () => {
+      pickSel.has(o.id) ? pickSel.delete(o.id) : pickSel.add(o.id);
+      li.classList.toggle("sel", pickSel.has(o.id));
+      li.querySelector(".chk").textContent = pickSel.has(o.id) ? "✓" : "";
+    };
+    ul.append(li);
+  }
+  if (!opts.length) ul.innerHTML = `<li class="msg">Nada coincide.</li>`;
+}
+$("pickFilter").addEventListener("input", renderPicker);
+$("pickClear").onclick = () => { pickSel.clear(); renderPicker(); };
+$("pickDone").onclick = () => {
+  if (pickKind === "country") { selCountries = [...pickSel]; store.set("selCountries", selCountries); }
+  else { selTags = [...pickSel]; store.set("selTags", selTags); }
+  $("picker").hidden = true;
+  updatePickButtons();
+};
+$("qCountryBtn").onclick = () => openPicker("country");
+$("qTagBtn").onclick = () => openPicker("tag");
+
+// Búsqueda con varios países/géneros: una consulta por combinación, y se juntan
+function combos(f) {
+  const cs = f.countries.length ? f.countries : [null];
+  const ts = f.tags.length ? f.tags : [null];
+  const out = [];
+  for (const c of cs) for (const t of ts) {
+    const p = {};
+    if (f.name) p.name = f.name;
+    if (c) p.countrycode = c;
+    if (t) { p.tag = t; p.tagExact = "true"; }
+    out.push(p);
+  }
+  return out;
+}
+async function multiFetch(f, order, limitEach) {
+  const cb = combos(f).slice(0, 30);
+  const lists = await Promise.all(cb.map((p) =>
+    api("stations/search", { hidebroken: "false", order, reverse: "true", limit: limitEach, ...p }).catch(() => null)));
+  if (lists.every((l) => l === null)) throw new Error("sin conexión");
+  const seen = new Set(), out = [];
+  for (const l of lists) for (const s of l || []) {
+    if (seen.has(s.stationuuid) || !playable(s)) continue;
+    seen.add(s.stationuuid); out.push(slim(s));
+  }
+  return out;
+}
+async function searchMulti(f, offset) {
+  const cb = combos(f);
+  if (cb.length === 1) return searchStations(cb[0], offset);
+  if (offset > 0) return { items: [], full: false };
+  const items = await multiFetch(f, "clickcount", 100);
+  items.sort((a, b) => b.clickcount - a.clickcount);
+  return { items, full: false };
+}
+updatePickButtons();
+
 // ---------- Populares y búsqueda ----------
 const home = pagedList("homeList", "homeMore");
-const results = pagedList("searchList", "searchMore");
+const results = pagedList("searchList", "searchMore", searchMulti);
 
 async function loadFilters() {
-  const homeSel = $("homeCountry"), qSel = $("qCountry"), tagSel = $("qTag");
+  const homeSel = $("homeCountry");
   const homeCode = store.get("homeCountry", "ES");
   homeSel.innerHTML = `<option value="">🌍 Todo el mundo</option>`;
-  qSel.innerHTML = `<option value="">Cualquier país</option>`;
-  tagSel.innerHTML = `<option value="">Cualquier género</option>`;
   try {
     const [countries, tags] = await Promise.all([
       api("countries", {}),
@@ -209,12 +371,11 @@ async function loadFilters() {
       .filter((c) => c.iso_3166_1 && c.stationcount > 0)
       .map((c) => { let n = c.name; try { n = (REGION && REGION.of(c.iso_3166_1)) || n; } catch {} return { code: c.iso_3166_1, name: n, count: c.stationcount }; })
       .sort((a, b) => a.name.localeCompare(b.name, "es"));
-    for (const c of list) {
-      homeSel.add(new Option(`${c.name} (${c.count})`, c.code));
-      qSel.add(new Option(c.name, c.code));
-    }
-    tags.sort((a, b) => a.name.localeCompare(b.name, "es"));
-    for (const t of tags) if (t.name) tagSel.add(new Option(`${t.name} (${t.stationcount})`, t.name));
+    for (const c of list) homeSel.add(new Option(`${c.name} (${c.count})`, c.code));
+    allCountries = list;
+    allTags = tags.filter((t) => t.name).map((t) => ({ name: t.name, count: t.stationcount }))
+      .sort((a, b) => a.name.localeCompare(b.name, "es"));
+    updatePickButtons();
   } catch {
     homeSel.add(new Option("España", "ES"));
   }
@@ -338,7 +499,7 @@ audio.addEventListener("pause", () => {
   }
 });
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.3";
+const APP_VERSION = "1.4";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
@@ -430,18 +591,13 @@ let randomPool = [];
 let randomKey = "";
 let randomBusy = false;
 function searchFilters() {
-  const p = {};
-  const name = $("qName").value.trim();
-  if (name) p.name = name;
-  if ($("qCountry").value) p.countrycode = $("qCountry").value;
-  if ($("qTag").value) { p.tag = $("qTag").value; p.tagExact = "true"; }
-  return p;
+  return { name: $("qName").value.trim(), countries: [...selCountries], tags: [...selTags] };
 }
-function filtersText(p) {
+function filtersText(f) {
   const parts = [];
-  if (p.countrycode) parts.push($("qCountry").selectedOptions[0].textContent);
-  if (p.tag) parts.push(p.tag);
-  if (p.name) parts.push("«" + p.name + "»");
+  if (f.countries.length) parts.push(f.countries.map(countryLabel).join(", "));
+  if (f.tags.length) parts.push(f.tags.join(", "));
+  if (f.name) parts.push("«" + f.name + "»");
   return parts.length ? parts.join(" · ") : "todo el mundo";
 }
 function showRandomCard(st) {
@@ -464,8 +620,8 @@ async function nextRandom() {
   try {
     if (!randomPool.length) {
       // Todas las que cumplen los filtros, en orden aleatorio (sin repetir hasta agotarlas)
-      const data = await api("stations/search", { ...p, order: "random", limit: 300, hidebroken: "false" });
-      randomPool = data.filter(playable).map(slim);
+      randomPool = await multiFetch(p, "random", Math.max(50, Math.floor(300 / combos(p).length)));
+      for (let i = randomPool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [randomPool[i], randomPool[j]] = [randomPool[j], randomPool[i]]; }
       if (current) randomPool = randomPool.filter((s) => s.stationuuid !== current.stationuuid || randomPool.length === 1);
     }
     const st = randomPool.shift();

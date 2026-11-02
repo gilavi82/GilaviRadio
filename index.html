@@ -40,8 +40,8 @@
     <section id="tab-search" class="tab">
       <form id="searchForm" class="filters">
         <input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off">
-        <select id="qCountry" aria-label="País"></select>
-        <select id="qTag" aria-label="Género"></select>
+        <button type="button" id="qCountryBtn" class="pickBtn">Cualquier país</button>
+        <button type="button" id="qTagBtn" class="pickBtn">Cualquier género</button>
         <button type="submit" class="primary half">Buscar</button>
         <button type="button" id="rGo" class="primary half alt">🎲 Aleatoria</button>
       </form>
@@ -98,6 +98,17 @@
     <p class="small">Versión <span id="appVersion"></span></p>
     <button id="appRefresh" class="primary refreshBtn">↻ Actualizar la app</button>
     <button id="statReset" class="more danger">Borrar historial</button>
+  </div>
+
+  <div id="picker" class="sheet" hidden>
+    <div class="sheetHead">
+      <h2 id="pickTitle">Países</h2>
+      <button id="pickDone" class="chip on">Listo</button>
+    </div>
+    <input id="pickFilter" class="pickFilter" type="search" placeholder="Escribe para filtrar" autocomplete="off">
+    <p id="pickHint" class="small"></p>
+    <ul id="pickList" class="pickList"></ul>
+    <button id="pickClear" class="more">Quitar selección</button>
   </div>
 
   <div id="sleepSheet" class="sheet" hidden>

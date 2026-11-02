@@ -103,3 +103,12 @@ button, input, select { font: inherit; color: inherit; }
 .refreshBtn { display: block; width: 100%; margin-top: 16px; padding: 13px; }
 .updateBar { position: fixed; left: 8px; right: 8px; top: calc(env(safe-area-inset-top) + 8px); z-index: 25; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--accent); border-radius: 12px; padding: 8px 8px 8px 14px; }
 .updateBar .primary { flex: none; flex-basis: auto; padding: 8px 14px; }
+.pickBtn { flex: 1 1 45%; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pickBtn.on { border-color: var(--accent); color: var(--accent); }
+.pickFilter { width: 100%; margin-top: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
+.pickList { list-style: none; margin: 0; padding: 0; }
+.pickList li { display: flex; align-items: center; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+.pickList .chk { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--line); flex: none; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #111; }
+.pickList li.sel .chk { background: var(--accent); border-color: var(--accent); }
+.pickList .pName2 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pickList .pCount { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
