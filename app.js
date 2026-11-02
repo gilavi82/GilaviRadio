@@ -203,7 +203,7 @@ async function loadFilters() {
   try {
     const [countries, tags] = await Promise.all([
       api("countries", {}),
-      api("tags", { order: "stationcount", reverse: "true", limit: 150 }),
+      api("tags", { order: "stationcount", reverse: "true", limit: 500 }),
     ]);
     const list = countries
       .filter((c) => c.iso_3166_1 && c.stationcount > 0)
@@ -213,6 +213,7 @@ async function loadFilters() {
       homeSel.add(new Option(`${c.name} (${c.count})`, c.code));
       qSel.add(new Option(c.name, c.code));
     }
+    tags.sort((a, b) => a.name.localeCompare(b.name, "es"));
     for (const t of tags) if (t.name) tagSel.add(new Option(`${t.name} (${t.stationcount})`, t.name));
   } catch {
     homeSel.add(new Option("España", "ES"));
@@ -227,12 +228,8 @@ $("homeCountry").onchange = (e) => {
 $("searchForm").onsubmit = (e) => {
   e.preventDefault();
   document.activeElement.blur();
-  const p = {};
-  const name = $("qName").value.trim();
-  if (name) p.name = name;
-  if ($("qCountry").value) p.countrycode = $("qCountry").value;
-  if ($("qTag").value) { p.tag = $("qTag").value; p.tagExact = "true"; }
-  results.search(p);
+  $("rCard").hidden = true;
+  results.search(searchFilters());
 };
 
 // ---------- Favoritas ----------
@@ -405,39 +402,65 @@ $("statReset").onclick = () => {
   renderInfo();
 };
 
-// ---------- Emisora aleatoria ----------
+// ---------- Emisora aleatoria (dentro de Buscar, con los filtros de país y género) ----------
 let randomPool = [];
+let randomKey = "";
 let randomBusy = false;
+function searchFilters() {
+  const p = {};
+  const name = $("qName").value.trim();
+  if (name) p.name = name;
+  if ($("qCountry").value) p.countrycode = $("qCountry").value;
+  if ($("qTag").value) { p.tag = $("qTag").value; p.tagExact = "true"; }
+  return p;
+}
+function filtersText(p) {
+  const parts = [];
+  if (p.countrycode) parts.push($("qCountry").selectedOptions[0].textContent);
+  if (p.tag) parts.push(p.tag);
+  if (p.name) parts.push("«" + p.name + "»");
+  return parts.length ? parts.join(" · ") : "todo el mundo";
+}
 function showRandomCard(st) {
+  $("rCard").hidden = false;
   $("rName").textContent = st.name;
   $("rMeta").textContent = meta(st) || " ";
   setLogo($("rLogo"), st);
-  $("rFav").hidden = false;
-  $("rNext").hidden = false;
-  $("rGo").textContent = "🎲 Otra aleatoria";
   refreshListsState();
 }
 async function nextRandom() {
   if (randomBusy) return;
   randomBusy = true;
+  const p = searchFilters();
+  const key = JSON.stringify(p);
+  // Si cambian los filtros, empezamos una tanda nueva
+  if (key !== randomKey) { randomPool = []; randomKey = key; }
+  $("rCard").hidden = false;
   $("rName").textContent = "Buscando…";
+  $("rMeta").textContent = "Aleatoria en " + filtersText(p);
   try {
     if (!randomPool.length) {
-      const data = await api("stations/search", { order: "random", limit: 30, hidebroken: "false" });
+      // Todas las que cumplen los filtros, en orden aleatorio (sin repetir hasta agotarlas)
+      const data = await api("stations/search", { ...p, order: "random", limit: 300, hidebroken: "false" });
       randomPool = data.filter(playable).map(slim);
+      if (current) randomPool = randomPool.filter((s) => s.stationuuid !== current.stationuuid || randomPool.length === 1);
     }
     const st = randomPool.shift();
-    if (!st) throw new Error("vacío");
+    if (!st) {
+      $("rName").textContent = "No hay emisoras";
+      $("rMeta").textContent = "No se encontró ninguna emisora en " + filtersText(p) + ". Prueba con otros filtros.";
+      return;
+    }
     showRandomCard(st);
     play(st, null, true);
   } catch {
-    $("rName").textContent = "Emisora aleatoria";
-    toast("No se pudo conectar. Revisa tu conexión.");
+    $("rName").textContent = "Sin conexión";
+    $("rMeta").textContent = "No se pudo conectar. Revisa tu conexión.";
   } finally { randomBusy = false; }
 }
-$("rGo").onclick = nextRandom;
+$("rGo").onclick = () => { document.activeElement.blur(); nextRandom(); };
 $("rNext").onclick = nextRandom;
-$("rFav").onclick = () => current && randomMode && toggleFav(current);
+$("rFav").onclick = () => current && toggleFav(current);
 
 window.addEventListener("online", () => { if (wantPlaying) { retries = 0; start(); } });
 

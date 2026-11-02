@@ -26,7 +26,6 @@
     <button data-tab="favs">Favoritas</button>
     <button data-tab="home" class="active">Populares</button>
     <button data-tab="search">Buscar</button>
-    <button data-tab="random">Aleatoria</button>
   </nav>
 
   <main>
@@ -43,8 +42,16 @@
         <input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off">
         <select id="qCountry" aria-label="País"></select>
         <select id="qTag" aria-label="Género"></select>
-        <button type="submit" class="primary">Buscar</button>
+        <button type="submit" class="primary half">Buscar</button>
+        <button type="button" id="rGo" class="primary half alt">🎲 Aleatoria</button>
       </form>
+      <div id="rCard" class="rCard" hidden>
+        <img id="rLogo" class="rLogo" alt="" src="icons/icon-192.png">
+        <div id="rName" class="rName"></div>
+        <div id="rMeta" class="rMeta"></div>
+        <button id="rFav" class="icon rFav" aria-label="Favorita">☆</button>
+        <button id="rNext" class="more rBtn">Siguiente ⏭</button>
+      </div>
       <ul id="searchList" class="list"></ul>
       <button id="searchMore" class="more" hidden>Cargar más</button>
     </section>
@@ -52,17 +59,6 @@
     <section id="tab-favs" class="tab">
       <p id="favsEmpty" class="empty">Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
       <ul id="favsList" class="list"></ul>
-    </section>
-
-    <section id="tab-random" class="tab">
-      <div class="rCard">
-        <img id="rLogo" class="rLogo" alt="" src="icons/icon-192.png">
-        <div id="rName" class="rName">Emisora aleatoria</div>
-        <div id="rMeta" class="rMeta">Pulsa el botón y sonará una emisora al azar de cualquier país del mundo.</div>
-        <button id="rFav" class="icon rFav" aria-label="Favorita" hidden>☆</button>
-      </div>
-      <button id="rGo" class="primary rBtn">🎲 Emisora aleatoria</button>
-      <button id="rNext" class="more rBtn" hidden>Siguiente ⏭</button>
     </section>
   </main>
 
