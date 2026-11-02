@@ -854,7 +854,7 @@ let stShown = null;
 async function openStationInfo(st) {
   if (!st) return;
   stShown = st;
-  showStTab("info");
+  showStTab("rel");
   showRelated(st);
   $("stGoogle").href = googleLogoUrl(st);
   $("stLogoReset").hidden = !myLogos[st.stationuuid];
@@ -1028,7 +1028,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.9";
+const APP_VERSION = "5.0";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");

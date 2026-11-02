@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4.9">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.0">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=4.9">
+  <link rel="stylesheet" href="style.css?v=5.0">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=4.9" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=5.0" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -139,10 +139,10 @@
     </div>
     <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div></div>
     <nav class="stTabs">
-      <button data-st="info" class="active">Info</button>
-      <button data-st="rel">Relacionadas</button>
+      <button data-st="rel" class="active">Relacionadas</button>
+      <button data-st="info">Info</button>
     </nav>
-    <div id="stPaneInfo">
+    <div id="stPaneInfo" hidden>
     <div class="logoTools">
       <a id="stGoogle" class="chip linkChip" href="https://www.google.com/" target="_blank" rel="noopener">🔎 Buscar logo en Google</a>
       <button id="stPaste" class="chip">📋 Pegar logo</button>
@@ -152,7 +152,7 @@
     <ul id="stInfo" class="kv"></ul>
     <p class="small">Datos de Radio Browser. Algunas emisoras no tienen todos los campos rellenos.</p>
     </div>
-    <div id="stPaneRel" hidden>
+    <div id="stPaneRel">
       <p class="small">Primero otras de la misma cadena y después del mismo género, empezando por las del mismo país.</p>
       <ul id="stRelated" class="list"></ul>
     </div>
@@ -190,7 +190,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=4.9"></script>
-  <script src="app.js?v=4.9"></script>
+  <script src="tz.js?v=5.0"></script>
+  <script src="app.js?v=5.0"></script>
 </body>
 </html>
