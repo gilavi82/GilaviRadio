@@ -1,3 +1,4 @@
+[hidden] { display: none !important; }
 :root {
   --bg: #0f172a;
   --card: #1e293b;
@@ -19,7 +20,7 @@ button, input, select { font: inherit; color: inherit; }
 .chip.on { border-color: var(--accent); color: var(--accent); }
 
 .tabs { display: flex; gap: 6px; padding: 8px 16px; position: sticky; top: 0; background: var(--bg); z-index: 5; }
-.tabs button { flex: 1; background: var(--card); border: 0; border-radius: 10px; padding: 10px 0; color: var(--muted); }
+.tabs button { flex: 1; font-size: 15px; background: var(--card); border: 0; border-radius: 10px; padding: 10px 0; color: var(--muted); }
 .tabs button.active { background: var(--accent); color: #111; font-weight: 600; }
 
 .tab { display: none; padding: 0 16px; }
@@ -82,3 +83,10 @@ button, input, select { font: inherit; color: inherit; }
 .rank li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rank li span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
 .danger { color: #f87171; }
+
+.rCard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px 16px; text-align: center; margin-top: 8px; position: relative; }
+.rLogo { width: 120px; height: 120px; border-radius: 20px; object-fit: cover; background: var(--bg); }
+.rName { font-size: 22px; font-weight: 700; margin-top: 14px; overflow-wrap: anywhere; }
+.rMeta { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.rFav { position: absolute; top: 8px; right: 8px; font-size: 26px; }
+.rBtn { display: block; width: 100%; margin-top: 12px; font-size: 18px; padding: 14px; }

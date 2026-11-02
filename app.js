@@ -146,6 +146,10 @@ function refreshListsState() {
     b.classList.toggle("fav", isFav(id));
     li.classList.toggle("playing", current && current.stationuuid === id);
   });
+  if (current && $("rFav")) {
+    $("rFav").textContent = isFav(current.stationuuid) ? "★" : "☆";
+    $("rFav").classList.toggle("fav", isFav(current.stationuuid));
+  }
   if (current) {
     $("pFav").textContent = isFav(current.stationuuid) ? "★" : "☆";
     $("pFav").classList.toggle("fav", isFav(current.stationuuid));
@@ -253,7 +257,9 @@ let stallTimer = null;
 function setStatus(s) { $("pStatus").textContent = s; }
 function setToggle(playing) { $("pToggle").textContent = playing ? "❚❚" : "▶"; }
 
-function play(st, list) {
+let randomMode = false;
+function play(st, list, fromRandom) {
+  randomMode = !!fromRandom;
   current = st;
   queue = list && list.length ? list : [st];
   store.set("last", st);
@@ -300,7 +306,11 @@ function retry(reason) {
     const why = current.badCodec ? "Esta emisora no funciona: su formato de audio no es compatible con el iPhone"
       : current.httpOnly ? "Esta emisora no funciona en la web app (no tiene conexión segura)"
       : "Esta emisora no funciona ahora mismo";
-    stop(); setStatus(why); toast(why); return;
+    stop(); setStatus(why);
+    // En modo aleatorio saltamos solos a otra emisora
+    if (randomMode) { toast("No funcionaba, buscando otra…"); setTimeout(() => { if (randomMode && !wantPlaying) nextRandom(); }, 1200); }
+    else toast(why);
+    return;
   }
   if (retries >= 8) { stop(); setStatus("No se puede conectar con esta emisora"); return; }
   const delay = Math.min(1000 * 2 ** retries, 15000);
@@ -395,12 +405,47 @@ $("statReset").onclick = () => {
   renderInfo();
 };
 
+// ---------- Emisora aleatoria ----------
+let randomPool = [];
+let randomBusy = false;
+function showRandomCard(st) {
+  $("rName").textContent = st.name;
+  $("rMeta").textContent = meta(st) || " ";
+  setLogo($("rLogo"), st);
+  $("rFav").hidden = false;
+  $("rNext").hidden = false;
+  $("rGo").textContent = "🎲 Otra aleatoria";
+  refreshListsState();
+}
+async function nextRandom() {
+  if (randomBusy) return;
+  randomBusy = true;
+  $("rName").textContent = "Buscando…";
+  try {
+    if (!randomPool.length) {
+      const data = await api("stations/search", { order: "random", limit: 30, hidebroken: "false" });
+      randomPool = data.filter(playable).map(slim);
+    }
+    const st = randomPool.shift();
+    if (!st) throw new Error("vacío");
+    showRandomCard(st);
+    play(st, null, true);
+  } catch {
+    $("rName").textContent = "Emisora aleatoria";
+    toast("No se pudo conectar. Revisa tu conexión.");
+  } finally { randomBusy = false; }
+}
+$("rGo").onclick = nextRandom;
+$("rNext").onclick = nextRandom;
+$("rFav").onclick = () => current && randomMode && toggleFav(current);
+
 window.addEventListener("online", () => { if (wantPlaying) { retries = 0; start(); } });
 
 $("pToggle").onclick = () => (wantPlaying ? stop() : start());
 $("pFav").onclick = () => current && toggleFav(current);
 
 function step(dir) {
+  if (randomMode) { if (dir > 0) nextRandom(); return; }
   const list = queue.length > 1 ? queue : favs;
   if (!list.length) return;
   const i = list.findIndex((s) => current && s.stationuuid === current.stationuuid);
