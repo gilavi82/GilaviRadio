@@ -1,6 +1,6 @@
 // Guarda la interfaz de la app para que abra rápido. Las emisoras y la API siempre van por red.
-const CACHE = "gilaviradio-v18";
-const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest",
+const CACHE = "gilaviradio-v19";
+const SHELL = ["./", "index.html", "style.css", "app.js", "tz.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

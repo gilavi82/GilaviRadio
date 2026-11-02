@@ -43,6 +43,7 @@ function slim(s) {
     httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
     tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls, clickcount: s.clickcount || 0,
+    geo_lat: s.geo_lat, geo_long: s.geo_long,
     badCodec: BAD_CODECS.some((c) => (s.codec || "").toUpperCase().includes(c)),
   };
 }
@@ -554,7 +555,7 @@ function retry(reason) {
 
 audio.addEventListener("playing", () => {
   retries = 0; everPlayed = true; clearTimeout(stallTimer);
-  setStatus("En directo"); setToggle(true);
+  setStatus(liveStatus()); setToggle(true);
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
 });
 audio.addEventListener("waiting", () => {
@@ -573,8 +574,56 @@ audio.addEventListener("pause", () => {
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
   }
 });
+// ---------- Hora local de la emisora ----------
+const tzOffCache = {};
+function tzOffsetMin(tz) {
+  if (tz in tzOffCache) return tzOffCache[tz];
+  try {
+    const d = new Date();
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" })
+      .formatToParts(d).map((x) => [x.type, x.value]));
+    const asUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+    return (tzOffCache[tz] = Math.round((asUtc - d.getTime()) / 60000));
+  } catch { return (tzOffCache[tz] = null); }
+}
+function stationTz(st) {
+  const v = typeof TZ_BY_COUNTRY !== "undefined" && TZ_BY_COUNTRY[(st.countrycode || "").toUpperCase()];
+  if (!v) return null;
+  if (typeof v === "string") return { tz: v, approx: false };
+  const lat = parseFloat(st.geo_lat), lon = parseFloat(st.geo_long);
+  // País con varias zonas: la más cercana a la emisora si sabemos dónde está; si no, la principal
+  if (!isFinite(lat) || !isFinite(lon) || (lat === 0 && lon === 0)) {
+    // Solo avisamos de "aprox." si las zonas del país se separan más de una hora (EE. UU., Brasil…)
+    const offs = v.map((z) => tzOffsetMin(z[0])).filter((x) => x !== null);
+    return { tz: v[0][0], approx: offs.length > 1 && Math.max(...offs) - Math.min(...offs) > 60 };
+  }
+  let best = v[0], bestD = Infinity;
+  for (const z of v) {
+    const dLon = (z[2] - lon) * Math.cos((lat * Math.PI) / 180), dLat = z[1] - lat;
+    const d = dLon * dLon + dLat * dLat;
+    if (d < bestD) { bestD = d; best = z; }
+  }
+  return { tz: best[0], approx: false };
+}
+function stationLocalTime(st) {
+  const z = st && stationTz(st);
+  if (!z) return "";
+  try {
+    const t = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: z.tz });
+    return `🕐 ${t} en ${countryName(st)}${z.approx ? " (aprox.)" : ""}`;
+  } catch { return ""; }
+}
+function liveStatus() {
+  const t = stationLocalTime(current);
+  return t || "En directo";
+}
+// Actualiza la hora cada 20 s mientras suena
+setInterval(() => {
+  if (wantPlaying && current && !audio.paused && audio.readyState > 2) setStatus(liveStatus());
+}, 20000);
+
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.7";
+const APP_VERSION = "1.8";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
@@ -638,7 +687,7 @@ async function refreshApp() {
   toast("Actualizando…");
   try {
     // 1) Descarga de nuevo los archivos saltándose la memoria del navegador
-    const files = ["./", "index.html", "style.css", "app.js", "sw.js", "version.json", "manifest.webmanifest"];
+    const files = ["./", "index.html", "style.css", "app.js", "tz.js", "sw.js", "version.json", "manifest.webmanifest"];
     await withTimeout(Promise.all(files.map((f) => fetch(f, { cache: "reload" }).catch(() => {}))), 8000);
     // 2) Quita el service worker y su caché; se vuelven a instalar al recargar
     if ("serviceWorker" in navigator) {
