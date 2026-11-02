@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.4">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.5">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=5.4">
+  <link rel="stylesheet" href="style.css?v=5.5">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=5.4" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=5.5" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -52,8 +52,9 @@
         <div class="pickWrap"><button type="button" id="qCountryBtn" class="pickBtn">Cualquier país</button><button type="button" id="qCountryClear" class="qClear" aria-label="Quitar países" hidden>✕</button></div>
         <div class="pickWrap"><button type="button" id="qTagBtn" class="pickBtn">Cualquier género</button><button type="button" id="qTagClear" class="qClear" aria-label="Quitar géneros" hidden>✕</button></div>
         <button type="submit" class="primary full">Buscar</button>
-        <button type="button" id="rGo" class="primary half alt">🎲 Aleatoria</button>
-        <button type="button" id="nearGo" class="primary half alt">📍 Cerca de mí</button>
+        <button type="button" id="rGo" class="primary third alt">🎲 Aleatoria</button>
+        <button type="button" id="nearGo" class="primary third alt">📍 Cerca de mí</button>
+        <button type="button" id="mapGo" class="primary third alt">🗺️ Mapa</button>
       </form>
       <div id="rCard" class="rCard" hidden>
         <img id="rLogo" class="rLogo" alt="" src="icons/icon-192.png">
@@ -169,6 +170,18 @@
 
   </div>
 
+  <div id="mapSheet" class="sheet mapSheet" hidden>
+    <div class="sheetHead">
+      <h2>Mapa</h2>
+      <div class="topBtns">
+        <button id="mapLocate" class="chip">📍 Dónde estoy</button>
+        <button id="mapClose" class="chip">Cerrar</button>
+      </div>
+    </div>
+    <p id="mapHint" class="small">Cargando mapa…</p>
+    <div id="map"></div>
+  </div>
+
   <div id="sleepSheet" class="sheet" hidden>
     <div>
       <div class="sheetHead">
@@ -200,7 +213,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=5.4"></script>
-  <script src="app.js?v=5.4"></script>
+  <script src="tz.js?v=5.5"></script>
+  <script src="app.js?v=5.5"></script>
 </body>
 </html>

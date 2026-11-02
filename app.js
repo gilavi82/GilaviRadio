@@ -1133,7 +1133,92 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.4";
+const APP_VERSION = "5.5";
+// ---------- Mapa de emisoras ----------
+// Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es de CARTO (OpenStreetMap, oscuro).
+// Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
+let map = null, mapLayer = null;
+const mapMarkers = new Map();
+const mapStations = [];
+function loadLeaflet() {
+  if (window.L && L.markerClusterGroup) return Promise.resolve();
+  const add = (tag, attrs) => new Promise((res, rej) => { const el = document.createElement(tag); Object.assign(el, attrs); el.onload = res; el.onerror = rej; document.head.append(el); });
+  return Promise.all([
+    add("link", { rel: "stylesheet", href: "vendor/leaflet/leaflet.css" }),
+    add("link", { rel: "stylesheet", href: "vendor/leaflet/MarkerCluster.css" }),
+    add("link", { rel: "stylesheet", href: "vendor/leaflet/MarkerCluster.Default.css" }),
+  ]).then(() => add("script", { src: "vendor/leaflet/leaflet.js" }))
+    .then(() => add("script", { src: "vendor/leaflet/leaflet.markercluster.js" }));
+}
+function addMapStations(list) {
+  let added = 0;
+  for (const s of list) {
+    const lat = Number(s.geo_lat), lon = Number(s.geo_long);
+    if (!isFinite(lat) || !isFinite(lon) || (lat === 0 && lon === 0) || mapMarkers.has(s.stationuuid) || !playable(s)) continue;
+    const st = slim(s);
+    const m = L.circleMarker([lat, lon], { radius: 6, color: "#0f172a", weight: 1, fillColor: "#fb923c", fillOpacity: 0.95 });
+    m.bindPopup(() => {
+      const d = document.createElement("div");
+      d.className = "mapPop";
+      d.innerHTML = "<b></b><span></span><button>▶ Escuchar</button>";
+      d.children[0].textContent = st.name;
+      d.children[1].textContent = meta(st);
+      d.children[2].onclick = () => { play(st, mapStations); map.closePopup(); };
+      return d;
+    });
+    mapMarkers.set(st.stationuuid, m);
+    mapStations.push(st);
+    mapLayer.addLayer(m);
+    added++;
+  }
+  $("mapHint").textContent = `${mapMarkers.size} emisoras en el mapa. Solo salen las que tienen su ubicación en Radio Browser. Mueve o acerca el mapa para cargar más.`;
+  return added;
+}
+let mapTimer = null, mapWorldLoaded = false;
+async function loadMapArea() {
+  if (!map) return;
+  const c = map.getCenter(), b = map.getBounds();
+  const r = Math.min(2500, Math.max(20, distKm(c.lat, c.lng, b.getNorth(), b.getEast())));
+  try {
+    if (map.getZoom() <= 3) {
+      if (mapWorldLoaded) return;
+      mapWorldLoaded = true;
+      addMapStations(await api("stations/search", { hidebroken: "false", has_geo_info: "true", order: "clickcount", reverse: "true", limit: 1500 }));
+    } else {
+      addMapStations(await api("stations/search", {
+        hidebroken: "false", has_geo_info: "true", order: "clickcount", reverse: "true", limit: 500,
+        geo_lat: c.lat.toFixed(4), geo_long: c.lng.toFixed(4), geo_distance: String(Math.round(r * 1000)),
+      }));
+    }
+  } catch { $("mapHint").textContent = "No se pudieron cargar emisoras. Revisa tu conexión."; }
+}
+async function openMap() {
+  $("mapSheet").hidden = false;
+  try { await loadLeaflet(); } catch { $("mapHint").textContent = "No se pudo cargar el mapa."; return; }
+  if (!map) {
+    const v = store.get("mapView", { lat: 40.2, lng: -3.7, z: 5 });
+    map = L.map("map", { zoomControl: false, worldCopyJump: true }).setView([v.lat, v.lng], v.z);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 18, subdomains: "abcd",
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    }).addTo(map);
+    mapLayer = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, chunkedLoading: true });
+    map.addLayer(mapLayer);
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      store.set("mapView", { lat: c.lat, lng: c.lng, z: map.getZoom() });
+      clearTimeout(mapTimer); mapTimer = setTimeout(loadMapArea, 400);
+    });
+    loadMapArea();
+  }
+  setTimeout(() => map.invalidateSize(), 50);
+}
+$("mapGo").onclick = () => { document.activeElement.blur(); openMap(); };
+$("mapClose").onclick = () => { $("mapSheet").hidden = true; };
+$("mapLocate").onclick = async () => {
+  try { const p = await getPosition(); map && map.setView([p.lat, p.lon], 9); }
+  catch { toast("No se pudo saber tu ubicación."); }
+};
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
