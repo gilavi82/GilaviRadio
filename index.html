@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#0f172a">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=3.0">
+  <link rel="stylesheet" href="style.css?v=3.1">
 </head>
 <body>
   <header class="top">
@@ -22,11 +22,19 @@
     </div>
   </header>
 
+  <div class="stickyTop">
   <nav class="tabs">
     <button data-tab="favs">Favoritas</button>
     <button data-tab="home" class="active">Populares</button>
     <button data-tab="search">Buscar</button>
   </nav>
+  <div id="sortBar" class="sortBar">
+    <span>Ordenar por</span>
+    <button data-sort="votes">Votos</button>
+    <button data-sort="clickcount">Escuchas</button>
+    <button data-sort="clicktrend">Tendencia</button>
+  </div>
+  </div>
 
   <main>
     <section id="tab-home" class="tab active">
@@ -163,7 +171,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=3.0"></script>
-  <script src="app.js?v=3.0"></script>
+  <script src="tz.js?v=3.1"></script>
+  <script src="app.js?v=3.1"></script>
 </body>
 </html>

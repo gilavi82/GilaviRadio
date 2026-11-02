@@ -47,9 +47,13 @@ function slim(s) {
     badCodec: BAD_CODECS.some((c) => (s.codec || "").toUpperCase().includes(c)),
   };
 }
+let listSort = (() => { try { return JSON.parse(localStorage.getItem("listSort")) || ""; } catch { return ""; } })();
+// Orden de las listas (barra bajo las pestañas): votes, clickcount o clicktrend
+function sortKey() { return listSort || "clickcount"; }
+function sortItems(arr) { const k = sortKey(); return arr.sort((a, b) => (Number(b[k]) || 0) - (Number(a[k]) || 0)); }
 async function searchStations(params, offset) {
   const data = await api("stations/search", {
-    hidebroken: "false", order: "clickcount", reverse: "true",
+    hidebroken: "false", order: sortKey(), reverse: "true",
     limit: 60, offset, ...params,
   });
   return { items: data.filter(playable).map(slim), full: data.length === 60 };
@@ -282,7 +286,10 @@ function pagedList(ulId, moreId, loader = searchStations) {
     }
   }
   more.onclick = () => load(false);
-  return { search(params) { state.params = params; return load(true); } };
+  return {
+    search(params) { state.params = params; return load(true); },
+    reload() { if (state.params) load(true); },
+  };
 }
 
 // ---------- Pestañas ----------
@@ -453,8 +460,7 @@ async function searchMulti(f, offset) {
   const cb = combos(f);
   if (cb.length === 1) return searchStations(cb[0], offset);
   if (offset > 0) return { items: [], full: false };
-  const items = await multiFetch(f, "clickcount", 100);
-  items.sort((a, b) => b.clickcount - a.clickcount);
+  const items = sortItems(await multiFetch(f, sortKey(), 100));
   return { items, full: false };
 }
 updatePickButtons();
@@ -462,6 +468,21 @@ updatePickButtons();
 // ---------- Populares y búsqueda ----------
 const home = pagedList("homeList", "homeMore");
 const results = pagedList("searchList", "searchMore", searchMulti);
+function paintSortBar() {
+  document.querySelectorAll("#sortBar button").forEach((b) => b.classList.toggle("on", b.dataset.sort === listSort));
+}
+document.querySelectorAll("#sortBar button").forEach((b) => {
+  b.onclick = () => {
+    // Pulsar el botón activo lo quita (vuelve a tu orden en Favoritas y a escuchas en las demás)
+    listSort = listSort === b.dataset.sort ? "" : b.dataset.sort;
+    store.set("listSort", listSort);
+    paintSortBar();
+    renderFavs();
+    home.reload();
+    results.reload();
+  };
+});
+paintSortBar();
 
 async function loadFilters() {
   const homeSel = $("homeCountry");
@@ -548,8 +569,10 @@ function startFavDrag(e, li) {
 function renderFavs() {
   const ul = $("favsList");
   ul.innerHTML = "";
-  favs.forEach((st, i) => {
-    const li = stationItem(st, favs);
+  // Con un orden elegido en la barra se muestran ordenadas, sin tocar tu orden guardado
+  const shown = listSort && !favSorting ? sortItems(favs.slice()) : favs;
+  shown.forEach((st, i) => {
+    const li = stationItem(st, shown);
     if (favSorting) {
       // En modo ordenar: asa para arrastrar en lugar de la estrella, y tocar no reproduce
       li.onclick = null;
@@ -790,7 +813,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.0";
+const APP_VERSION = "3.1";
 // Actualiza votos/escuchas/tendencia de las favoritas (los datos guardados se quedan viejos)
 async function refreshFavStats() {
   if (!favs.length) return;
