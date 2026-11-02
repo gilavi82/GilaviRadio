@@ -854,6 +854,7 @@ let stShown = null;
 async function openStationInfo(st) {
   if (!st) return;
   stShown = st;
+  showStTab("info");
   showRelated(st);
   $("stGoogle").href = googleLogoUrl(st);
   $("stLogoReset").hidden = !myLogos[st.stationuuid];
@@ -904,6 +905,13 @@ async function openStationInfo(st) {
   }
 }
 $("stClose").onclick = () => { $("stSheet").hidden = true; };
+function showStTab(which) {
+  document.querySelectorAll(".stTabs button").forEach((b) => b.classList.toggle("active", b.dataset.st === which));
+  $("stPaneInfo").hidden = which !== "info";
+  $("stPaneRel").hidden = which !== "rel";
+  $("stSheet").scrollTop = 0;
+}
+document.querySelectorAll(".stTabs button").forEach((b) => { b.onclick = () => showStTab(b.dataset.st); });
 
 // ---------- Emisoras relacionadas ----------
 // Radio Browser no tiene "relacionadas", así que las deducimos:
@@ -1020,7 +1028,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.8";
+const APP_VERSION = "4.9";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
