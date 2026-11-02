@@ -224,6 +224,7 @@ function fmtNum(n) {
 // Indicadores de popularidad de Radio Browser: votos, escuchas (clics) y tendencia de escuchas
 // Mano (me gusta) monocroma: usa el color del texto
 const THUMB_SVG = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M2 21h4V9H2v12zm20-11a2 2 0 0 0-2-2h-6.3l.95-4.57.03-.32a1.5 1.5 0 0 0-.44-1.06L13.17 1 6.59 7.59A1.96 1.96 0 0 0 6 9v10a2 2 0 0 0 2 2h9a2 2 0 0 0 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>';
+const HEADPHONES_SVG = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H5v-1a7 7 0 0 1 14 0v1h-2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/></svg>';
 function fillPop(el, st) {
   el.textContent = "";
   if (st.votes == null && st.clickcount == null) return false;
@@ -232,7 +233,11 @@ function fillPop(el, st) {
   hand.className = "voteIcon";
   hand.setAttribute("aria-label", "votos");
   hand.innerHTML = THUMB_SVG;
-  el.append(hand, fmtNum(st.votes) + " · " + fmtNum(st.clickcount) + " escuchas · ");
+  const ears = document.createElement("span");
+  ears.className = "voteIcon";
+  ears.setAttribute("aria-label", "escuchas");
+  ears.innerHTML = HEADPHONES_SVG;
+  el.append(hand, fmtNum(st.votes) + " · ", ears, fmtNum(st.clickcount) + " · ");
   const tr = document.createElement("span");
   tr.className = t > 0 ? "trendUp" : t < 0 ? "trendDown" : "";
   tr.textContent = t > 0 ? "▲ +" + fmtNum(t) : t < 0 ? "▼ −" + fmtNum(-t) : "= 0";
@@ -957,7 +962,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.3";
+const APP_VERSION = "4.4";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
