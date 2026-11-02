@@ -1153,7 +1153,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.5";
+const APP_VERSION = "6.6";
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
   const tab = $("tab-search"), sc = tab.querySelector(".scroll");
@@ -1251,37 +1251,48 @@ async function openMap() {
   // Siempre empieza en tu posición actual (si das permiso); si no, donde lo dejaste
   getPosition().then((p) => { if (!$("mapSheet").hidden) map.setView([p.lat, p.lon], 9); }).catch(() => {});
 }
-// Buscador de lugares (OpenStreetMap Nominatim: gratis y sin clave)
-$("mapSearch").onsubmit = async (e) => {
-  e.preventDefault();
-  const q = $("mapQ").value.trim(), ul = $("mapResults");
-  if (!q) return;
-  $("mapQ").blur();
+// Buscador de lugares con sugerencias mientras escribes.
+// Photon (de Komoot, con datos de OpenStreetMap): gratis, sin clave y pensado para autocompletar.
+let mapQTimer = null, mapQSeq = 0;
+async function mapPlaceSearch(q) {
+  const ul = $("mapResults"), seq = ++mapQSeq;
+  if (q.length < 2) { ul.hidden = true; return; }
   ul.hidden = false;
-  ul.innerHTML = "<li>Buscando…</li>";
+  if (!ul.children.length) ul.innerHTML = "<li>Buscando…</li>";
   try {
-    const res = await fetch("https://nominatim.openstreetmap.org/search?" + new URLSearchParams({ q, format: "json", limit: "6", "accept-language": "es" }));
-    const list = await res.json();
+    const params = { q, limit: "7" };
+    if (map) { const c = map.getCenter(); params.lat = c.lat.toFixed(2); params.lon = c.lng.toFixed(2); }
+    const res = await fetch("https://photon.komoot.io/api/?" + new URLSearchParams(params));
+    const data = await res.json();
+    if (seq !== mapQSeq) return; // ya se escribió otra cosa
+    const feats = (data.features || []);
     ul.innerHTML = "";
-    if (!list.length) { ul.innerHTML = "<li>No he encontrado ese lugar.</li>"; return; }
-    for (const r of list) {
+    if (!feats.length) { ul.innerHTML = "<li>No he encontrado ese lugar.</li>"; return; }
+    for (const f of feats) {
+      const p = f.properties || {}, [lon, lat] = (f.geometry && f.geometry.coordinates) || [];
       const li = document.createElement("li");
-      const parts = (r.display_name || "").split(", ");
       li.innerHTML = "<span></span><small></small>";
-      li.children[0].textContent = parts[0];
-      li.children[1].textContent = parts.slice(1).join(", ");
+      li.children[0].textContent = p.name || p.city || p.state || p.country || "";
+      li.children[1].textContent = [p.city !== p.name ? p.city : "", p.state !== p.name ? p.state : "", p.country !== p.name ? p.country : ""].filter(Boolean).join(", ");
       li.onclick = () => {
-        ul.hidden = true;
-        const bb = r.boundingbox && r.boundingbox.map(Number);
-        if (bb && bb.length === 4) map.fitBounds([[bb[0], bb[2]], [bb[1], bb[3]]], { maxZoom: 11 });
-        else map.setView([Number(r.lat), Number(r.lon)], 10);
+        ul.hidden = true; $("mapQ").blur();
+        const e = p.extent; // [oeste, norte, este, sur]
+        if (e && e.length === 4) map.fitBounds([[e[3], e[0]], [e[1], e[2]]], { maxZoom: 11 });
+        else map.setView([lat, lon], 10);
       };
       ul.append(li);
     }
-  } catch { ul.innerHTML = "<li>No se pudo buscar. Revisa tu conexión.</li>"; }
-};
-$("mapQ").addEventListener("input", () => { $("mapQClear").hidden = !$("mapQ").value; if (!$("mapQ").value) $("mapResults").hidden = true; });
-$("mapQClear").onclick = () => { $("mapQ").value = ""; $("mapQClear").hidden = true; $("mapResults").hidden = true; $("mapQ").focus(); };
+  } catch { if (seq === mapQSeq) ul.innerHTML = "<li>No se pudo buscar. Revisa tu conexión.</li>"; }
+}
+$("mapSearch").onsubmit = (e) => { e.preventDefault(); clearTimeout(mapQTimer); mapPlaceSearch($("mapQ").value.trim()); };
+$("mapQ").addEventListener("input", () => {
+  const q = $("mapQ").value.trim();
+  $("mapQClear").hidden = !$("mapQ").value;
+  clearTimeout(mapQTimer);
+  if (!q) { $("mapResults").hidden = true; $("mapResults").innerHTML = ""; return; }
+  mapQTimer = setTimeout(() => mapPlaceSearch(q), 300);
+});
+$("mapQClear").onclick = () => { $("mapQ").value = ""; $("mapQClear").hidden = true; $("mapResults").hidden = true; $("mapResults").innerHTML = ""; $("mapQ").focus(); };
 $("mapGo").onclick = () => { document.activeElement.blur(); openMap(); };
 $("mapClose").onclick = () => { $("mapSheet").hidden = true; };
 $("mapLocate").onclick = async () => {
