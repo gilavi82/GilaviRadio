@@ -237,29 +237,7 @@ function renderFavs() {
 }
 
 // ---------- Reproductor ----------
-// Hay dos reproductores:
-//  - "plain": el normal. Es el más fiable con la pantalla bloqueada, pero iOS no deja cambiar su volumen.
-//  - "wa": pasa el sonido por Web Audio para poder ajustar el volumen de 1 en 1 %.
-//    Solo funciona con emisoras cuyo servidor lo permite (CORS); con las demás sonaría en silencio.
-const plainAudio = $("audio");
-const waAudio = new Audio();
-waAudio.crossOrigin = "anonymous";
-waAudio.preload = "none";
-document.body.append(waAudio);
-
-// iOS solo deja reproducir audio tras un toque del usuario. En el primer toque "desbloqueamos"
-// los dos reproductores con un sonido mudo, para poder usarlos después aunque haya esperas de red.
-const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
-function unlockAudio() {
-  for (const el of [plainAudio, waAudio]) {
-    if (el.getAttribute("src")) continue;
-    el.src = SILENCE;
-    el.play().catch(() => {}).finally(() => { if (el.src === SILENCE) release(el); });
-  }
-}
-document.addEventListener("touchend", unlockAudio, { once: true, capture: true });
-document.addEventListener("click", unlockAudio, { once: true, capture: true });
-let audio = plainAudio;
+const audio = $("audio");
 let current = null;
 let queue = [];
 let wantPlaying = false;
@@ -267,46 +245,8 @@ let retries = 0;
 let retryTimer = null;
 let stallTimer = null;
 
-let volume = store.get("volume", 100);
-let actx = null, gain = null;
-const corsCache = {};
-
-function ensureAudioGraph() {
-  if (actx) return true;
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return false;
-  try {
-    actx = new AC();
-    gain = actx.createGain();
-    gain.gain.value = volume / 100;
-    actx.createMediaElementSource(waAudio).connect(gain);
-    gain.connect(actx.destination);
-    // iOS "interrumpe" el audio a veces (llamadas, bloqueo): lo reanudamos si seguimos queriendo sonar
-    actx.addEventListener("statechange", () => {
-      if (wantPlaying && actx.state !== "running") actx.resume().catch(() => {});
-    });
-    return true;
-  } catch { actx = null; return false; }
-}
-
-// Comprueba si la emisora permite controlar su volumen (cabeceras CORS)
-async function corsAllowed(url) {
-  if (url in corsCache) return corsCache[url];
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 6000);
-  let ok = false;
-  try {
-    const res = await fetch(url, { mode: "cors", signal: ctrl.signal, cache: "no-store" });
-    ok = res.ok || res.type === "cors";
-  } catch { ok = false; }
-  clearTimeout(t);
-  ctrl.abort();
-  return (corsCache[url] = ok);
-}
-
 function setStatus(s) { $("pStatus").textContent = s; }
 function setToggle(playing) { $("pToggle").textContent = playing ? "❚❚" : "▶"; }
-function setVolNote(s) { $("volNote").textContent = s || ""; $("volNote").hidden = !s; }
 
 function play(st, list) {
   current = st;
@@ -315,7 +255,8 @@ function play(st, list) {
   retries = 0;
   $("player").hidden = false;
   $("pName").textContent = st.name;
-  setLogo($("pLogo"), st);
+  const logo = $("pLogo");
+  setLogo(logo, st);
   updateMediaSession();
   start();
   refreshListsState();
@@ -323,51 +264,24 @@ function play(st, list) {
   api("url/" + st.stationuuid).catch(() => {});
 }
 
-function release(el) {
-  el.pause();
-  el.removeAttribute("src");
-  el.load();
-}
-
-let startToken = 0;
-async function start() {
+function start() {
   if (!current) return;
-  const token = ++startToken;
   wantPlaying = true;
   clearTimeout(retryTimer);
   setStatus("Conectando…");
-  setToggle(true);
-
-  // Con el volumen al 100 % usamos siempre el reproductor normal (el más fiable)
-  let useWA = false;
-  setVolNote("");
-  if (volume < 100) {
-    // Hay que crear el audio dentro del toque del usuario, antes de esperar a la red
-    const graph = ensureAudioGraph();
-    if (graph) actx.resume().catch(() => {});
-    if (graph && (await corsAllowed(current.url_resolved))) useWA = true;
-    else setVolNote("Esta emisora no permite ajustar el volumen: usa los botones del iPhone.");
-    if (token !== startToken || !wantPlaying) return;
-  }
-
-  const next = useWA ? waAudio : plainAudio;
-  const other = useWA ? plainAudio : waAudio;
-  if (other.getAttribute("src")) release(other);
-  audio = next;
   audio.src = current.url_resolved;
   audio.play().catch((e) => {
-    if (e && e.name === "NotAllowedError" && token === startToken) {
-      wantPlaying = false; setStatus("Pulsa ▶ para escuchar"); setToggle(false);
-    }
+    if (e && e.name === "NotAllowedError") { wantPlaying = false; setStatus("Pulsa ▶ para escuchar"); setToggle(false); }
   });
+  setToggle(true);
 }
 
 function stop() {
   wantPlaying = false;
-  startToken++;
   clearTimeout(retryTimer); clearTimeout(stallTimer);
+  audio.pause();
   // Al ser radio en directo, soltamos la conexión para que al volver suene "en vivo"
-  release(plainAudio); release(waAudio);
+  audio.removeAttribute("src"); audio.load();
   setToggle(false);
   setStatus("En pausa");
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
@@ -383,56 +297,28 @@ function retry(reason) {
   retryTimer = setTimeout(start, delay);
 }
 
-for (const el of [plainAudio, waAudio]) {
-  const mine = (fn) => (e) => { if (e.target === audio && e.target.src !== SILENCE) fn(e); };
-  el.addEventListener("playing", mine(() => {
-    retries = 0; clearTimeout(stallTimer);
-    setStatus("En directo"); setToggle(true);
-    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
-  }));
-  el.addEventListener("waiting", mine(() => {
-    if (!wantPlaying) return;
-    setStatus("Cargando…");
-    clearTimeout(stallTimer);
-    stallTimer = setTimeout(() => retry("Conexión lenta"), 12000);
-  }));
-  el.addEventListener("stalled", mine(() => { if (wantPlaying) { clearTimeout(stallTimer); stallTimer = setTimeout(() => retry("Conexión perdida"), 8000); } }));
-  el.addEventListener("error", mine(() => { if (wantPlaying && audio.getAttribute("src")) retry("Error de conexión"); }));
-  el.addEventListener("ended", mine(() => retry("La emisión se cortó")));
-  el.addEventListener("pause", mine(() => {
-    // Pausa externa (otra app de audio, llamada…): reflejarlo en la interfaz
-    if (wantPlaying && !audio.ended && audio.readyState > 0 && !audio.error) {
-      wantPlaying = false; setToggle(false); setStatus("En pausa");
-      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
-    }
-  }));
-}
-window.addEventListener("online", () => { if (wantPlaying) { retries = 0; start(); } });
-
-// ---------- Volumen (de 1 en 1 %) ----------
-function showVolume() {
-  $("vol").value = volume;
-  $("volLabel").textContent = volume + " %";
-  $("vol").style.background = "";
-}
-function setVolume(v, commit) {
-  volume = Math.max(0, Math.min(100, Math.round(v)));
-  showVolume();
-  if (gain) gain.gain.value = volume / 100;
-  if (!commit) return;
-  store.set("volume", volume);
-  // Si está sonando con el reproductor normal y bajas del 100 %, hay que pasar al de Web Audio (o al revés)
+audio.addEventListener("playing", () => {
+  retries = 0; clearTimeout(stallTimer);
+  setStatus("En directo"); setToggle(true);
+  if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+});
+audio.addEventListener("waiting", () => {
   if (!wantPlaying) return;
-  const needWA = volume < 100;
-  const onWA = audio === waAudio;
-  if (needWA && !onWA && corsCache[current.url_resolved] !== false) start();
-  else if (!needWA && onWA) start();
-}
-$("vol").addEventListener("input", (e) => setVolume(+e.target.value, false));
-$("vol").addEventListener("change", (e) => setVolume(+e.target.value, true));
-$("volDown").onclick = () => setVolume(volume - 1, true);
-$("volUp").onclick = () => setVolume(volume + 1, true);
-showVolume();
+  setStatus("Cargando…");
+  clearTimeout(stallTimer);
+  stallTimer = setTimeout(() => retry("Conexión lenta"), 12000);
+});
+audio.addEventListener("stalled", () => { if (wantPlaying) { clearTimeout(stallTimer); stallTimer = setTimeout(() => retry("Conexión perdida"), 8000); } });
+audio.addEventListener("error", () => { if (wantPlaying && audio.getAttribute("src")) retry("Error de conexión"); });
+audio.addEventListener("ended", () => retry("La emisión se cortó"));
+audio.addEventListener("pause", () => {
+  // Pausa externa (otra app de audio, llamada…): reflejarlo en la interfaz
+  if (wantPlaying && !audio.ended && audio.readyState > 0 && !audio.error) {
+    wantPlaying = false; setToggle(false); setStatus("En pausa");
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+  }
+});
+window.addEventListener("online", () => { if (wantPlaying) { retries = 0; start(); } });
 
 $("pToggle").onclick = () => (wantPlaying ? stop() : start());
 $("pFav").onclick = () => current && toggleFav(current);

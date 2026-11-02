@@ -52,22 +52,13 @@
   </main>
 
   <footer id="player" class="player" hidden>
-    <div class="pRow">
-      <img id="pLogo" alt="">
-      <div class="pInfo">
-        <div id="pName" class="pName"></div>
-        <div id="pStatus" class="pStatus"></div>
-      </div>
-      <button id="pFav" class="icon" aria-label="Favorita">☆</button>
-      <button id="pToggle" class="icon big" aria-label="Reproducir">▶</button>
+    <img id="pLogo" alt="">
+    <div class="pInfo">
+      <div id="pName" class="pName"></div>
+      <div id="pStatus" class="pStatus"></div>
     </div>
-    <div class="pVol">
-      <button id="volDown" class="volBtn" aria-label="Bajar 1 %">−</button>
-      <input id="vol" type="range" min="0" max="100" step="1" value="100" aria-label="Volumen">
-      <button id="volUp" class="volBtn" aria-label="Subir 1 %">+</button>
-      <span id="volLabel" class="volLabel">100 %</span>
-    </div>
-    <div id="volNote" class="volNote" hidden></div>
+    <button id="pFav" class="icon" aria-label="Favorita">☆</button>
+    <button id="pToggle" class="icon big" aria-label="Reproducir">▶</button>
   </footer>
 
   <audio id="audio" preload="none"></audio>
