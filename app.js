@@ -1153,7 +1153,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.7";
+const APP_VERSION = "6.8";
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
   const tab = $("tab-search"), sc = tab.querySelector(".scroll");
@@ -1191,16 +1191,8 @@ function addMapStations(list) {
     const lat = Number(s.geo_lat), lon = Number(s.geo_long);
     if (!isFinite(lat) || !isFinite(lon) || (lat === 0 && lon === 0) || mapMarkers.has(s.stationuuid) || !playable(s)) continue;
     const st = slim(s);
-    const m = L.circleMarker([lat, lon], { radius: 6, color: "#0f172a", weight: 1, fillColor: "#fb923c", fillOpacity: 0.95 });
-    m.bindPopup(() => {
-      const d = document.createElement("div");
-      d.className = "mapPop";
-      d.innerHTML = "<b></b><span></span><button>▶ Escuchar</button>";
-      d.children[0].textContent = st.name;
-      d.children[1].textContent = meta(st);
-      d.children[2].onclick = () => { play(st, mapStations); map.closePopup(); };
-      return d;
-    });
+    const m = L.circleMarker([lat, lon], { radius: 9, color: "#0f172a", weight: 2, fillColor: "#fb923c", fillOpacity: 0.95, st });
+    m.on("click", () => showMapList([st], m.getLatLng()));
     mapMarkers.set(st.stationuuid, m);
     mapStations.push(st);
     mapLayer.addLayer(m);
@@ -1240,7 +1232,14 @@ async function openMap() {
       maxZoom: 19, className: "darkTiles",
       attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
     }).addTo(map);
-    mapLayer = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, chunkedLoading: true });
+    // Al tocar un grupo no se acerca el mapa: se abre la lista de sus emisoras
+    // (muchas emisoras comparten la misma ubicación y el grupo nunca se separaría)
+    mapLayer = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45, chunkedLoading: true, zoomToBoundsOnClick: false, spiderfyOnMaxZoom: false });
+    mapLayer.on("clusterclick", (e) => {
+      const list = e.layer.getAllChildMarkers().map((mk) => mk.options.st).filter(Boolean);
+      showMapList(list, e.layer.getLatLng(), e.layer.getBounds());
+    });
+    map.on("click", () => { $("mapList").hidden = true; });
     map.addLayer(mapLayer);
     map.on("moveend", () => {
       const c = map.getCenter();
@@ -1295,6 +1294,31 @@ $("mapQ").addEventListener("input", () => {
   mapQTimer = setTimeout(() => mapPlaceSearch(q), 300);
 });
 $("mapQClear").onclick = () => { $("mapQ").value = ""; $("mapQClear").hidden = true; $("mapResults").hidden = true; $("mapResults").innerHTML = ""; $("mapQ").focus(); };
+let mapListArea = null;
+function showMapList(list, center, bounds) {
+  list = list.slice().sort((x, y) => (y.clickcount || 0) - (x.clickcount || 0));
+  mapListArea = { center, bounds };
+  $("mapListTitle").textContent = list.length === 1 ? "1 emisora" : list.length + " emisoras aquí";
+  $("mapZoom").hidden = map.getZoom() >= 14;
+  const ul = $("mapListUl");
+  ul.innerHTML = "";
+  for (const st of list) {
+    const li = stationItem(st, list);
+    li.onclick = () => play(st, list);
+    ul.append(li);
+  }
+  $("mapList").hidden = false;
+  ul.scrollTop = 0;
+  refreshListsState();
+}
+$("mapListClose").onclick = () => { $("mapList").hidden = true; };
+$("mapZoom").onclick = () => {
+  $("mapList").hidden = true;
+  const a = mapListArea;
+  if (!a) return;
+  if (a.bounds && a.bounds.isValid() && !a.bounds.getNorthEast().equals(a.bounds.getSouthWest())) map.fitBounds(a.bounds, { maxZoom: 15, padding: [30, 30] });
+  else map.setView(a.center, Math.min(map.getZoom() + 3, 15));
+};
 $("mapGo").onclick = () => { document.activeElement.blur(); openMap(); };
 $("mapClose").onclick = () => { $("mapSheet").hidden = true; document.body.classList.remove("mapOpen"); };
 $("mapLocate").onclick = async () => {
