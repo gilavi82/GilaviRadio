@@ -696,7 +696,7 @@ function renderFavs() {
       w.className = "stDown";
       const since = st.lastcheckoktime ? new Date(st.lastcheckoktime.endsWith("Z") ? st.lastcheckoktime : st.lastcheckoktime.replace(" ", "T") + "Z") : null;
       const days = since && !isNaN(since) ? Math.floor((Date.now() - since) / 86400000) : null;
-      w.textContent = "⚠️ Parece caída" + (days == null ? "" : days < 1 ? " · funcionaba hoy" : days === 1 ? " · funcionaba ayer" : ` · no funciona desde hace ${days} días`);
+      w.textContent = "⚠️ Parece caída" + (days == null ? "" : days < 1 ? "\nFuncionaba hoy" : days === 1 ? "\nFuncionaba ayer" : `\nNo funciona desde hace ${days} días`);
       const main = li.querySelector(".stMain");
       if (main) main.append(w);
       li.classList.add("down");
@@ -1086,7 +1086,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "7.5";
+const APP_VERSION = "7.6";
 
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
