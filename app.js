@@ -1086,7 +1086,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "7.6";
+const APP_VERSION = "7.7";
 
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
@@ -1617,3 +1617,21 @@ $("sleepCustom").value = store.get("sleepCustom", "") || "";
 })();
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+// Botón "volver arriba" cuando la lista activa está muy abajo
+(() => {
+  const btn = $("toTop");
+  const activeScroll = () => document.querySelector(".tab.active .scroll");
+  const update = () => {
+    const sc = activeScroll();
+    const show = !!sc && sc.scrollTop > 600;
+    btn.hidden = !show;
+    if (show) {
+      const bar = document.querySelector(".tab.active .favBar");
+      btn.classList.toggle("aboveBar", !!bar && !bar.hidden);
+    }
+  };
+  document.querySelector("main").addEventListener("scroll", update, true);
+  document.addEventListener("click", e => { if (e.target.closest("[data-tab]")) setTimeout(update, 0); });
+  btn.onclick = () => { const sc = activeScroll(); if (sc) sc.scrollTo({ top: 0, behavior: "smooth" }); };
+})();
