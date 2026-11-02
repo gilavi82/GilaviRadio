@@ -664,7 +664,14 @@ function startFavDrag(e, li) {
     clearInterval(scrollTimer);
     const sc = ul.closest(".scroll"), box = sc.getBoundingClientRect();
     const edge = y < box.top + 50 ? -8 : y > box.bottom - 50 ? 8 : 0;
-    if (edge) scrollTimer = setInterval(() => { sc.scrollBy(0, edge); startY -= edge; li.style.transform = `translateY(${y - startY}px)`; }, 16);
+    if (edge) scrollTimer = setInterval(() => {
+      // Solo compensa lo que la lista se ha movido de verdad (arriba o abajo del todo no se mueve)
+      const before = sc.scrollTop;
+      sc.scrollBy(0, edge);
+      const moved = sc.scrollTop - before;
+      if (!moved) { clearInterval(scrollTimer); return; }
+      startY -= moved; li.style.transform = `translateY(${y - startY}px)`;
+    }, 16);
   };
   const onUp = () => {
     clearInterval(scrollTimer);
@@ -1086,7 +1093,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.0.1";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
