@@ -1,6 +1,6 @@
 {
-  "name": "GilaviRadio",
-  "short_name": "GilaviRadio",
+  "name": "GRadio",
+  "short_name": "GRadio",
   "lang": "es",
   "start_url": "./",
   "scope": "./",

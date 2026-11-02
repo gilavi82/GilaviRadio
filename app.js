@@ -414,7 +414,7 @@ function updateMediaSession() {
   navigator.mediaSession.metadata = new MediaMetadata({
     title: current.name,
     artist: [countryName(current), (current.tags || "").split(",")[0]].filter(Boolean).join(" · "),
-    album: "GilaviRadio",
+    album: "GRadio",
     artwork: [{ src: art, sizes: "128x128" }],
   });
 }
