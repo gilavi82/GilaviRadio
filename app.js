@@ -28,22 +28,26 @@ async function api(path, params = {}) {
   throw lastErr;
 }
 
-// Safari solo reproduce bien MP3, AAC y HLS. La web va por HTTPS, así que solo emisoras HTTPS.
+// Safari solo reproduce bien MP3, AAC y HLS.
+// La web va por HTTPS: las emisoras que solo dan dirección http se intentan por https
+// (muchos servidores aceptan las dos); si no responde, se avisa.
 const OK_CODECS = ["MP3", "AAC", "AAC+", "HE-AAC", "UNKNOWN", ""];
 function playable(s) {
-  return s.url_resolved && s.url_resolved.startsWith("https://") &&
+  return s.url_resolved && /^https?:\/\//i.test(s.url_resolved) &&
     (s.hls === 1 || OK_CODECS.includes((s.codec || "").toUpperCase()));
 }
 function slim(s) {
   return {
-    stationuuid: s.stationuuid, name: (s.name || "").trim(), url_resolved: s.url_resolved,
+    stationuuid: s.stationuuid, name: (s.name || "").trim(),
+    url_resolved: s.url_resolved.replace(/^http:\/\//i, "https://"),
+    httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
     tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls,
   };
 }
 async function searchStations(params, offset) {
   const data = await api("stations/search", {
-    hidebroken: "true", is_https: "true", order: "clickcount", reverse: "true",
+    hidebroken: "true", order: "clickcount", reverse: "true",
     limit: 60, offset, ...params,
   });
   return { items: data.filter(playable).map(slim), full: data.length === 60 };
@@ -289,6 +293,7 @@ function stop() {
 function retry(reason) {
   if (!wantPlaying || !current) return;
   clearTimeout(retryTimer);
+  if (current.httpOnly && retries >= 2) { stop(); setStatus("Esta emisora no funciona en la web app (sin conexión segura)"); return; }
   if (retries >= 8) { stop(); setStatus("No se puede conectar con esta emisora"); return; }
   const delay = Math.min(1000 * 2 ** retries, 15000);
   retries++;
