@@ -70,14 +70,10 @@ const workedNow = new Set();
 let myVotes = store.get("myVotes", {}); // uuid → "on" | "off" (existir = ya enviado)
 
 const isFav = (id) => favs.some((f) => f.stationuuid === id);
-// Carpetas de favoritas: lista de carpetas y a qué carpeta va cada emisora
-let folders = store.get("folders", []);       // [{ id, name }]
-let favFolder = store.get("favFolder", {});   // uuid → id de carpeta
-let curFolder = "";                           // carpeta que se está viendo ("" = todas)
-function saveFolders() { store.set("folders", folders); store.set("favFolder", favFolder); }
+try { localStorage.removeItem("folders"); localStorage.removeItem("favFolder"); } catch {}
 function toggleFav(st) {
-  if (isFav(st.stationuuid)) { favs = favs.filter((f) => f.stationuuid !== st.stationuuid); delete favFolder[st.stationuuid]; saveFolders(); }
-  else { favs.push(st); if (curFolder) { favFolder[st.stationuuid] = curFolder; saveFolders(); } }
+  if (isFav(st.stationuuid)) favs = favs.filter((f) => f.stationuuid !== st.stationuuid);
+  else favs.push(st);
   store.set("favs", favs);
   renderFavs();
   refreshListsState();
@@ -692,9 +688,7 @@ function renderFavs() {
   const ul = $("favsList");
   ul.innerHTML = "";
   // Con un orden elegido en la barra se muestran ordenadas, sin tocar tu orden guardado
-  renderFolderBar();
-  const inFolder = curFolder ? favs.filter((f) => favFolder[f.stationuuid] === curFolder) : favs;
-  const shown = listSort && !favSorting ? sortItems(inFolder.slice()) : inFolder;
+  const shown = listSort && !favSorting ? sortItems(favs.slice()) : favs;
   shown.forEach((st, i) => {
     const li = stationItem(st, shown);
     if ((st.lastcheckok === 0 || st.lastcheckok === "0") && !workedNow.has(st.stationuuid)) {
@@ -721,7 +715,6 @@ function renderFavs() {
     ul.append(li);
   });
   $("favsEmpty").hidden = favs.length > 0;
-  $("folderEmpty").hidden = !(favs.length && curFolder && !shown.length);
   if (shown.length < 2) favSorting = false;
   $("favBar").hidden = shown.length < 2;
   $("favSortBtn").hidden = favSorting;
@@ -730,65 +723,6 @@ function renderFavs() {
   ul.classList.toggle("sorting", favSorting);
   refreshListsState();
 }
-function renderFolderBar() {
-  const bar = $("folderBar");
-  bar.hidden = !favs.length;
-  bar.innerHTML = "";
-  if (curFolder && !folders.some((f) => f.id === curFolder)) curFolder = "";
-  const chip = (label, id, extra) => {
-    const b = document.createElement("button");
-    b.className = "chip" + (id === curFolder ? " on" : "") + (extra || "");
-    b.textContent = label;
-    b.onclick = () => {
-      if (id === null) return newFolder();
-      if (id && id === curFolder) return editFolder(id); // tocar la carpeta abierta: renombrar o borrar
-      curFolder = id; favSorting = false; renderFavs(); $("favsList").closest(".scroll").scrollTop = 0;
-    };
-    bar.append(b);
-  };
-  chip("Todas", "");
-  folders.forEach((f) => chip("📁 " + f.name, f.id));
-  chip("+ Carpeta", null, " addFolder");
-}
-function newFolder() {
-  const name = (prompt("Nombre de la carpeta nueva (por ejemplo Noticias, Música, Deportes):") || "").trim();
-  if (!name) return;
-  const id = "f" + Date.now().toString(36);
-  folders.push({ id, name: name.slice(0, 30) });
-  saveFolders();
-  curFolder = id; renderFavs();
-  toast("Carpeta creada. Para meter emisoras, abre su ficha (toca el nombre en el reproductor) y elige la carpeta.");
-}
-function editFolder(id) {
-  const f = folders.find((x) => x.id === id);
-  if (!f) return;
-  const name = prompt("Nuevo nombre de la carpeta. Déjalo vacío para borrarla.", f.name);
-  if (name === null) return;
-  if (name.trim()) { f.name = name.trim().slice(0, 30); saveFolders(); renderFavs(); return; }
-  if (!confirm(`¿Borrar la carpeta "${f.name}"? Las emisoras siguen en tus favoritas.`)) return;
-  folders = folders.filter((x) => x.id !== id);
-  for (const k in favFolder) if (favFolder[k] === id) delete favFolder[k];
-  saveFolders(); curFolder = ""; renderFavs();
-}
-function paintFolderSelect(st) {
-  const row = $("stFolderRow"), sel = $("stFolder");
-  const show = !!st && isFav(st.stationuuid);
-  row.hidden = !show;
-  if (!show) return;
-  sel.innerHTML = `<option value="">Sin carpeta</option>` + folders.map((f) => `<option value="${f.id}"></option>`).join("") + `<option value="__new">+ Carpeta nueva…</option>`;
-  [...sel.options].forEach((o) => { const f = folders.find((x) => x.id === o.value); if (f) o.textContent = f.name; });
-  sel.value = favFolder[st.stationuuid] || "";
-}
-$("stFolder").onchange = () => {
-  const st = stShown, sel = $("stFolder");
-  if (!st) return;
-  if (sel.value === "__new") {
-    const name = (prompt("Nombre de la carpeta nueva:") || "").trim();
-    if (name) { const id = "f" + Date.now().toString(36); folders.push({ id, name: name.slice(0, 30) }); favFolder[st.stationuuid] = id; }
-  } else if (sel.value) favFolder[st.stationuuid] = sel.value;
-  else delete favFolder[st.stationuuid];
-  saveFolders(); paintFolderSelect(st); renderFavs();
-};
 $("favSortBtn").onclick = () => { favSnapshot = favs.slice(); favSorting = true; renderFavs(); };
 $("favDone").onclick = () => { favSorting = false; favSnapshot = null; store.set("favs", favs); renderFavs(); toast("Orden guardado"); };
 $("favCancel").onclick = () => { if (favSnapshot) favs = favSnapshot; favSnapshot = null; favSorting = false; renderFavs(); };
@@ -978,7 +912,6 @@ let stShown = null;
 async function openStationInfo(st) {
   if (!st) return;
   stShown = st;
-  paintFolderSelect(st);
   showStTab("rel");
   showRelated(st);
   $("stGoogle").href = googleLogoUrl(st);
@@ -1153,41 +1086,8 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "7.0";
-// ---------- Compartir emisora ----------
-// El enlace lleva el identificador de la emisora: https://…/GilaviRadio/?emisora=<id>
-function shareUrl(st) {
-  return new URL("./?emisora=" + encodeURIComponent(st.stationuuid), location.href.split("?")[0]).href;
-}
-$("stShare").onclick = async () => {
-  const st = stShown;
-  if (!st) return;
-  const url = shareUrl(st);
-  const text = "Escucha " + st.name + " en GilaviRadio";
-  try {
-    if (navigator.share) { await navigator.share({ title: st.name, text, url }); return; }
-  } catch (e) { if (e && e.name === "AbortError") return; }
-  try { await navigator.clipboard.writeText(text + ": " + url); toast("Enlace copiado"); }
-  catch { prompt("Copia este enlace:", url); }
-};
-// Si la app se abre desde un enlace compartido, prepara esa emisora en el reproductor
-async function openSharedStation() {
-  const id = new URLSearchParams(location.search).get("emisora");
-  if (!id) return;
-  history.replaceState(null, "", location.pathname);
-  try {
-    const r = await api("stations/byuuid/" + encodeURIComponent(id));
-    if (!r || !r[0] || !playable(r[0])) { toast("No he encontrado la emisora compartida"); return; }
-    const st = slim(r[0]);
-    current = st; queue = [st];
-    $("player").hidden = false;
-    $("pName").textContent = st.name;
-    setPop(st); setLogo($("pLogo"), st);
-    setStatus("Te han compartido esta emisora. Pulsa ▶");
-    updateMediaSession(); refreshListsState();
-    toast("Emisora compartida: " + st.name + ". Pulsa ▶ para escucharla");
-  } catch { toast("No se pudo cargar la emisora compartida"); }
-}
+const APP_VERSION = "7.1";
+
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
   const tab = $("tab-search"), sc = tab.querySelector(".scroll");
@@ -1711,7 +1611,6 @@ $("sleepCustom").value = store.get("sleepCustom", "") || "";
     updateMediaSession();
     refreshListsState();
   }
-  openSharedStation();
   await loadFilters();
   const code = $("homeCountry").value;
   home.search(code ? { countrycode: code } : {});

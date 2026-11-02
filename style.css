@@ -176,12 +176,6 @@ body.mapOpen .player { z-index: 40; }
 .stHead { display: flex; gap: 14px; align-items: center; margin: 16px 0 8px; }
 .stHead img { width: 72px; height: 72px; border-radius: 14px; object-fit: contain; background: #fff; flex: none; }
 .linkChip { text-decoration: none; display: inline-flex; align-items: center; color: var(--text); }
-.folderBar { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
-.folderBar::-webkit-scrollbar { display: none; }
-.folderBar .chip { flex: none; white-space: nowrap; }
-.folderBar .addFolder { color: var(--muted); border-style: dashed; }
-.stFolderRow { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; color: var(--muted); font-size: 14px; }
-.stFolderRow select { flex: 1; min-width: 0; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 15px; -webkit-appearance: none; appearance: none; }
 .stTabs { display: flex; gap: 6px; margin: 4px 0 10px; }
 .stTabs button { flex: 1; background: var(--card); border: 0; border-radius: 10px; padding: 9px 0; color: var(--muted); }
 .stTabs button.active { background: var(--accent); color: #111; font-weight: 600; }
@@ -220,4 +214,3 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
 body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-bottom)); }
 
 .stHead .n { flex: 1; min-width: 0; }
-.shareBtn { flex: none; align-self: center; }
