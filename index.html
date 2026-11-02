@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4.7">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4.8">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=4.7">
+  <link rel="stylesheet" href="style.css?v=4.8">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=4.7" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=4.8" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -144,6 +144,10 @@
       <button id="stLogoReset" class="chip" hidden>Quitar mi logo</button>
     </div>
     <p class="small">En Google, mantén el dedo sobre el logo que te guste y pulsa <b>Copiar</b>. Vuelve aquí y pulsa <b>Pegar logo</b>.</p>
+    <h3>Emisoras relacionadas</h3>
+    <p class="small">Primero otras de la misma cadena y después del mismo género, empezando por las del mismo país.</p>
+    <ul id="stRelated" class="list"></ul>
+    <h3>Datos de la emisora</h3>
     <ul id="stInfo" class="kv"></ul>
     <p class="small">Datos de Radio Browser. Algunas emisoras no tienen todos los campos rellenos.</p>
   </div>
@@ -179,7 +183,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=4.7"></script>
-  <script src="app.js?v=4.7"></script>
+  <script src="tz.js?v=4.8"></script>
+  <script src="app.js?v=4.8"></script>
 </body>
 </html>

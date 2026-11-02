@@ -854,6 +854,7 @@ let stShown = null;
 async function openStationInfo(st) {
   if (!st) return;
   stShown = st;
+  showRelated(st);
   $("stGoogle").href = googleLogoUrl(st);
   $("stLogoReset").hidden = !myLogos[st.stationuuid];
   $("stSheet").hidden = false;
@@ -903,6 +904,60 @@ async function openStationInfo(st) {
   }
 }
 $("stClose").onclick = () => { $("stSheet").hidden = true; };
+
+// ---------- Emisoras relacionadas ----------
+// Radio Browser no tiene "relacionadas", así que las deducimos:
+// 1) misma cadena (el nombre empieza igual: COPE…, Onda Cero…)  2) mismo género, primero del mismo país.
+const BRAND_SKIP = /^(radio|r[aá]dio|la|el|los|las|the|fm|am|emisora|online|super|top|my|mi|tu|best|hit|hits|music|musica|música|\d+)$/i;
+const norm = (s) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function brandOf(st) {
+  const words = cleanStationName(st.name).split(" ").filter(Boolean);
+  if (!words.length) return "";
+  if (words[0].length >= 3 && !BRAND_SKIP.test(words[0])) return words[0];
+  if (words.length >= 2 && !BRAND_SKIP.test(words[1])) return words.slice(0, 2).join(" ");
+  return "";
+}
+async function relatedStations(st) {
+  const cc = (st.countrycode || "").toUpperCase();
+  const tags = (st.tags || "").split(",").map((t) => t.trim().toLowerCase()).filter((t) => t && t.length > 1).slice(0, 2);
+  const brand = brandOf(st);
+  const q = (p) => api("stations/search", { hidebroken: "false", order: "clickcount", reverse: "true", ...p }).catch(() => []);
+  const reqs = [];
+  reqs.push(brand ? q({ name: brand, limit: 40 }) : Promise.resolve([]));
+  for (const t of tags) {
+    if (cc) reqs.push(q({ tag: t, tagExact: "true", countrycode: cc, limit: 25 }));
+    reqs.push(q({ tag: t, tagExact: "true", limit: 25 }));
+  }
+  if (!tags.length && cc) reqs.push(q({ countrycode: cc, limit: 25 }));
+  const [brandList, ...rest] = await Promise.all(reqs);
+  const seen = new Set([st.stationuuid]);
+  const seenName = new Set([norm(st.name)]);
+  const take = (s) => {
+    if (!playable(s) || seen.has(s.stationuuid) || seenName.has(norm(s.name))) return false;
+    seen.add(s.stationuuid); seenName.add(norm(s.name)); return true;
+  };
+  const nb = norm(brand);
+  const sameBrand = brandList.filter((s) => nb && (norm(cleanStationName(s.name)) + " ").startsWith(nb + " ")).filter(take).slice(0, 8).map(slim);
+  const pool = rest.flat();
+  pool.sort((x, y) => ((y.countrycode || "").toUpperCase() === cc) - ((x.countrycode || "").toUpperCase() === cc) || (y.clickcount || 0) - (x.clickcount || 0));
+  const similar = pool.filter(take).slice(0, 20 - sameBrand.length).map(slim);
+  return [...sameBrand, ...similar];
+}
+async function showRelated(st) {
+  const ul = $("stRelated");
+  ul.innerHTML = `<li class="msg">Buscando emisoras relacionadas…</li>`;
+  let list = [];
+  try { list = await relatedStations(st); } catch {}
+  if (stShown !== st) return;
+  ul.innerHTML = "";
+  if (!list.length) { ul.innerHTML = `<li class="msg">No he encontrado emisoras relacionadas.</li>`; return; }
+  for (const r of list) {
+    const li = stationItem(r, list);
+    li.onclick = () => { $("stSheet").hidden = true; play(r, list); };
+    ul.append(li);
+  }
+  refreshListsState();
+}
 
 // ---------- Logo propio desde Google ----------
 // Enlace normal (no window.open): en la app de pantalla de inicio del iPhone window.open puede no hacer nada
@@ -965,7 +1020,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.7";
+const APP_VERSION = "4.8";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
