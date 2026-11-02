@@ -965,7 +965,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "4.5";
+const APP_VERSION = "4.6";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
@@ -1008,6 +1008,17 @@ setTimeout(refreshFavStats, 1500);
   new MutationObserver(place).observe(pl, { attributes: true, attributeFilter: ["hidden"] });
   window.addEventListener("resize", place);
   place();
+  // Al abrir la app, el iPhone a veces calcula mal la parte de abajo de la pantalla hasta que
+  // cambias de pestaña. Hacemos lo mismo que un cambio de pestaña, sin que se note.
+  const relayout = () => {
+    const t = document.querySelector(".tab.active");
+    if (t) { t.classList.remove("active"); void t.offsetHeight; t.classList.add("active"); }
+    place();
+  };
+  window.addEventListener("load", () => { relayout(); setTimeout(relayout, 300); setTimeout(relayout, 1200); });
+  window.addEventListener("pageshow", () => setTimeout(relayout, 100));
+  window.addEventListener("orientationchange", () => setTimeout(relayout, 300));
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) setTimeout(relayout, 100); });
 })();
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
