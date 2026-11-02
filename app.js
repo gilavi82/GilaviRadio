@@ -43,7 +43,7 @@ function slim(s) {
     httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
     tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls, clickcount: s.clickcount || 0,
-    geo_lat: s.geo_lat, geo_long: s.geo_long,
+    geo_lat: s.geo_lat, geo_long: s.geo_long, homepage: s.homepage || "",
     badCodec: BAD_CODECS.some((c) => (s.codec || "").toUpperCase().includes(c)),
   };
 }
@@ -85,11 +85,21 @@ const PLACEHOLDER = "icons/icon-192.png";
 function proxied(url) {
   return "https://images.weserv.nl/?w=128&h=128&fit=contain&url=" + encodeURIComponent(url.replace(/^https?:\/\//, ""));
 }
+function homeDomain(st) {
+  try { const u = new URL((st.homepage || "").trim()); return /^https?:$/.test(u.protocol) ? u.hostname.replace(/^www\./, "") : ""; } catch { return ""; }
+}
+// Orden de búsqueda del logo: el de Radio Browser (directo y por proxy) y, si no hay o falla,
+// el icono de la página web de la emisora (DuckDuckGo y Google). Si nada funciona, iniciales.
 function logoCandidates(st) {
+  const out = [];
   const f = (st.favicon || "").trim();
-  if (!/^https?:\/\//i.test(f)) return [];
-  const https = f.replace(/^http:\/\//i, "https://");
-  return [https, proxied(f)];
+  if (/^https?:\/\//i.test(f)) out.push({ url: f.replace(/^http:\/\//i, "https://") }, { url: proxied(f) });
+  const d = homeDomain(st);
+  if (d) {
+    out.push({ url: `https://icons.duckduckgo.com/ip3/${d}.ico`, min: 17 });
+    out.push({ url: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=128`, min: 17 });
+  }
+  return out;
 }
 function initialsIcon(name) {
   const words = (name || "?").replace(/[^\p{L}\p{N} ]/gu, " ").trim().split(/\s+/);
@@ -101,14 +111,17 @@ function initialsIcon(name) {
 function setLogo(img, st) {
   const list = logoCandidates(st);
   let i = 0;
-  const next = () => { img.src = i < list.length ? list[i] : initialsIcon(st.name); i++; };
+  const next = () => { img.src = i < list.length ? list[i].url : initialsIcon(st.name); i++; };
   img.onerror = () => { if (i <= list.length) next(); };
-  img.onload = () => { if (img.naturalWidth < 8 && i <= list.length) next(); };
+  // Descarta imágenes vacías o el icono genérico de 16 px que dan los servicios cuando no hay logo
+  img.onload = () => { const c = list[i - 1]; if (c && img.naturalWidth < (c.min || 8)) next(); };
   next();
 }
 function artworkUrl(st) {
-  const list = logoCandidates(st);
-  return list.length ? list[1] : new URL("icons/icon-512.png", location.href).href;
+  const f = (st.favicon || "").trim();
+  if (/^https?:\/\//i.test(f)) return proxied(f);
+  const d = homeDomain(st);
+  return d ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=128` : new URL("icons/icon-512.png", location.href).href;
 }
 const REGION = (() => { try { return new Intl.DisplayNames(["es"], { type: "region" }); } catch { return null; } })();
 function countryName(st) {
@@ -468,6 +481,23 @@ function renderFavs() {
   ul.classList.toggle("sorting", favSorting);
   refreshListsState();
 }
+// Las favoritas guardadas antes no tenían la web de la emisora: la pedimos una vez para buscar su logo
+let favsRefreshed = false;
+async function refreshFavDetails() {
+  if (favsRefreshed) return;
+  favsRefreshed = true;
+  const missing = favs.filter((f) => !("homepage" in f));
+  if (!missing.length) return;
+  try {
+    const data = await api("stations/byuuid", { uuids: missing.map((f) => f.stationuuid).join(",") });
+    const byId = Object.fromEntries(data.map((d) => [d.stationuuid, d]));
+    favs = favs.map((f) => (byId[f.stationuuid] ? { ...f, homepage: byId[f.stationuuid].homepage || "", favicon: byId[f.stationuuid].favicon || f.favicon } : f));
+    store.set("favs", favs);
+    if (!favSorting) renderFavs();
+  } catch { favsRefreshed = false; }
+}
+setTimeout(refreshFavDetails, 1500);
+
 $("favSortBtn").onclick = () => { favSnapshot = favs.slice(); favSorting = true; renderFavs(); };
 $("favDone").onclick = () => { favSorting = false; favSnapshot = null; store.set("favs", favs); renderFavs(); toast("Orden guardado"); };
 $("favCancel").onclick = () => { if (favSnapshot) favs = favSnapshot; favSnapshot = null; favSorting = false; renderFavs(); };
@@ -682,7 +712,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.9";
+const APP_VERSION = "2.0";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
