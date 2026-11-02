@@ -214,3 +214,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
 body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-bottom)); }
 
 .stHead .n { flex: 1; min-width: 0; }
+
+/* Ficha: título, logo y pestañas fijos; solo se desplaza el contenido de la pestaña */
+#stSheet { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+#stPaneInfo, #stPaneRel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -16px; padding: 0 16px calc(env(safe-area-inset-bottom) + 24px); }

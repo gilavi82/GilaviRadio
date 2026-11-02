@@ -967,7 +967,7 @@ function showStTab(which) {
   document.querySelectorAll(".stTabs button").forEach((b) => b.classList.toggle("active", b.dataset.st === which));
   $("stPaneInfo").hidden = which !== "info";
   $("stPaneRel").hidden = which !== "rel";
-  $("stSheet").scrollTop = 0;
+  $("stPaneInfo").scrollTop = 0; $("stPaneRel").scrollTop = 0;
 }
 document.querySelectorAll(".stTabs button").forEach((b) => { b.onclick = () => showStTab(b.dataset.st); });
 
@@ -1086,7 +1086,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "7.1";
+const APP_VERSION = "7.2";
 
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
