@@ -211,11 +211,12 @@ function fmtNum(n) {
   return n.toLocaleString("es-ES");
 }
 // Indicadores de popularidad de Radio Browser: votos, escuchas (clics) y tendencia de escuchas
-function popText(st) {
+function popText(st, short) {
   if (st.votes == null && st.clickcount == null) return "";
   const t = Number(st.clicktrend) || 0;
   const trend = t > 0 ? "▲ +" + fmtNum(t) : t < 0 ? "▼ −" + fmtNum(-t) : "= 0";
-  return "👍 " + fmtNum(st.votes) + " votos · 🎧 " + fmtNum(st.clickcount) + " escuchas · " + trend;
+  return short ? "👍 " + fmtNum(st.votes) + " · 🎧 " + fmtNum(st.clickcount) + " · " + trend
+    : "👍 " + fmtNum(st.votes) + " votos · 🎧 " + fmtNum(st.clickcount) + " escuchas · " + trend;
 }
 function stationItem(st, list) {
   const li = document.createElement("li");
@@ -592,6 +593,11 @@ function setStatus(s) { $("pStatus").textContent = s; }
 function setToggle(playing) { $("pToggle").textContent = playing ? "❚❚" : "▶"; }
 
 let randomMode = false;
+function setPop(st) {
+  const t = popText(st, true);
+  $("pPop").textContent = t;
+  $("pPop").hidden = !t;
+}
 function play(st, list, fromRandom) {
   randomMode = !!fromRandom;
   current = st;
@@ -600,6 +606,7 @@ function play(st, list, fromRandom) {
   retries = 0; everPlayed = false;
   $("player").hidden = false;
   $("pName").textContent = st.name;
+  setPop(st);
   const logo = $("pLogo");
   setLogo(logo, st);
   updateMediaSession();
@@ -782,7 +789,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.8";
+const APP_VERSION = "2.9";
 // Actualiza votos/escuchas/tendencia de las favoritas (los datos guardados se quedan viejos)
 async function refreshFavStats() {
   if (!favs.length) return;
@@ -797,6 +804,11 @@ async function refreshFavStats() {
     if (!d) continue;
     f.votes = d.votes || 0; f.clickcount = d.clickcount || 0; f.clicktrend = d.clicktrend || 0;
     changed = true;
+  }
+  if (current && fresh[current.stationuuid]) {
+    const d = fresh[current.stationuuid];
+    Object.assign(current, { votes: d.votes || 0, clickcount: d.clickcount || 0, clicktrend: d.clicktrend || 0 });
+    setPop(current);
   }
   if (changed && !favSorting) { store.set("favs", favs); renderFavs(); refreshListsState(); }
 }
@@ -1046,6 +1058,7 @@ $("sleepCustom").value = store.get("sleepCustom", "") || "";
     current = last; queue = favs.length ? favs : [last];
     $("player").hidden = false;
     $("pName").textContent = last.name;
+    setPop(last);
     setLogo($("pLogo"), last);
     setStatus("Pulsa ▶ para escuchar");
     updateMediaSession();
