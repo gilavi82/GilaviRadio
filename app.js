@@ -28,13 +28,13 @@ async function api(path, params = {}) {
   throw lastErr;
 }
 
-// Safari solo reproduce bien MP3, AAC y HLS.
-// La web va por HTTPS: las emisoras que solo dan dirección http se intentan por https
-// (muchos servidores aceptan las dos); si no responde, se avisa.
-const OK_CODECS = ["MP3", "AAC", "AAC+", "HE-AAC", "UNKNOWN", ""];
+// Se muestran TODAS las emisoras, sin filtros. Si una no suena, se avisa al intentarlo.
+// La web va por HTTPS: las que solo dan dirección http se intentan por https
+// (muchos servidores aceptan las dos).
+const BAD_CODECS = ["OGG", "OPUS", "FLAC", "WMA", "VORBIS"];
 function playable(s) {
-  return s.url_resolved && /^https?:\/\//i.test(s.url_resolved) &&
-    (s.hls === 1 || OK_CODECS.includes((s.codec || "").toUpperCase()));
+  if (!s.url_resolved && s.url) s.url_resolved = s.url;
+  return s.url_resolved && /^https?:\/\//i.test(s.url_resolved);
 }
 function slim(s) {
   return {
@@ -43,14 +43,12 @@ function slim(s) {
     httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
     tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls,
-    maybeBroken: s.lastcheckok === 0,
+    badCodec: BAD_CODECS.some((c) => (s.codec || "").toUpperCase().includes(c)),
   };
 }
 async function searchStations(params, offset) {
   const data = await api("stations/search", {
-    // Al buscar por nombre mostramos también las que Radio Browser marca como caídas:
-    // sus comprobaciones se hacen desde fuera de España y a veces fallan con emisoras locales.
-    hidebroken: params.name ? "false" : "true", order: "clickcount", reverse: "true",
+    hidebroken: "false", order: "clickcount", reverse: "true",
     limit: 60, offset, ...params,
   });
   return { items: data.filter(playable).map(slim), full: data.length === 60 };
@@ -117,7 +115,7 @@ function countryName(st) {
 }
 function meta(st) {
   const tags = (st.tags || "").split(",").filter(Boolean).slice(0, 2).join(", ");
-  return [st.maybeBroken ? "⚠ puede no funcionar" : "", countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
+  return [countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
 }
 
 function stationItem(st, list) {
@@ -200,8 +198,8 @@ async function loadFilters() {
   tagSel.innerHTML = `<option value="">Cualquier género</option>`;
   try {
     const [countries, tags] = await Promise.all([
-      api("countries", { hidebroken: "true" }),
-      api("tags", { hidebroken: "true", order: "stationcount", reverse: "true", limit: 150 }),
+      api("countries", {}),
+      api("tags", { order: "stationcount", reverse: "true", limit: 150 }),
     ]);
     const list = countries
       .filter((c) => c.iso_3166_1 && c.stationcount > 0)
@@ -248,6 +246,7 @@ let current = null;
 let queue = [];
 let wantPlaying = false;
 let retries = 0;
+let everPlayed = false; // si la emisora llegó a sonar en este intento
 let retryTimer = null;
 let stallTimer = null;
 
@@ -258,7 +257,7 @@ function play(st, list) {
   current = st;
   queue = list && list.length ? list : [st];
   store.set("last", st);
-  retries = 0;
+  retries = 0; everPlayed = false;
   $("player").hidden = false;
   $("pName").textContent = st.name;
   const logo = $("pLogo");
@@ -296,7 +295,13 @@ function stop() {
 function retry(reason) {
   if (!wantPlaying || !current) return;
   clearTimeout(retryTimer);
-  if (current.httpOnly && retries >= 2) { stop(); setStatus("Esta emisora no funciona en la web app (sin conexión segura)"); return; }
+  // Si nunca llegó a sonar, no insistimos mucho: avisamos de que no funciona
+  if (!everPlayed && retries >= 2) {
+    const why = current.badCodec ? "Esta emisora no funciona: su formato de audio no es compatible con el iPhone"
+      : current.httpOnly ? "Esta emisora no funciona en la web app (no tiene conexión segura)"
+      : "Esta emisora no funciona ahora mismo";
+    stop(); setStatus(why); toast(why); return;
+  }
   if (retries >= 8) { stop(); setStatus("No se puede conectar con esta emisora"); return; }
   const delay = Math.min(1000 * 2 ** retries, 15000);
   retries++;
@@ -305,7 +310,7 @@ function retry(reason) {
 }
 
 audio.addEventListener("playing", () => {
-  retries = 0; clearTimeout(stallTimer);
+  retries = 0; everPlayed = true; clearTimeout(stallTimer);
   setStatus("En directo"); setToggle(true);
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
 });
