@@ -101,10 +101,99 @@ function initialsIcon(name) {
 function setLogo(img, st) {
   const list = logoCandidates(st);
   let i = 0;
-  const next = () => { img.src = i < list.length ? list[i] : initialsIcon(st.name); i++; };
+  img.dataset.logoFor = st.stationuuid || st.name;
+  const next = () => {
+    if (i < list.length) img.src = list[i];
+    else { img.src = initialsIcon(st.name); wikidataInto(img, st); }
+    i++;
+  };
   img.onerror = () => { if (i <= list.length) next(); };
   img.onload = () => { if (img.naturalWidth < 8 && i <= list.length) next(); };
   next();
+}
+
+// ---------- Logos de Wikidata (solo si Radio Browser no tiene) ----------
+// Wikidata es la base de datos abierta de Wikipedia. Tiene el logo oficial de las emisoras
+// conocidas. Buscamos por nombre y solo aceptamos resultados descritos como radio/emisora.
+const WD_API = "https://www.wikidata.org/w/api.php";
+const wdCache = (() => { try { return JSON.parse(localStorage.getItem("wdLogos") || "{}"); } catch { return {}; } })();
+let wdSaveTimer = null;
+function wdSave() { clearTimeout(wdSaveTimer); wdSaveTimer = setTimeout(() => { try { localStorage.setItem("wdLogos", JSON.stringify(wdCache)); } catch {} }, 1000); }
+const wdQueue = [];
+let wdActive = 0;
+function wdRun(task) {
+  return new Promise((res) => { wdQueue.push(() => task().then(res, () => res(null))); wdPump(); });
+}
+function wdPump() {
+  while (wdActive < 2 && wdQueue.length) {
+    const t = wdQueue.shift(); wdActive++;
+    t().finally(() => { wdActive--; wdPump(); });
+  }
+}
+function cleanStationName(n) {
+  return (n || "")
+    .split(/\s[-–|•:]\s|\s\(|\[/)[0]
+    .replace(/\b\d{2,3}([.,]\d)?\s*(fm|mhz)\b/gi, " ")
+    .replace(/\b(fm|am|mhz|online|radio online|en vivo|live|stream|hd|hq)\b/gi, " ")
+    .replace(/\s+/g, " ").trim();
+}
+async function wdQuery(params) {
+  const res = await fetch(WD_API + "?" + new URLSearchParams({ format: "json", origin: "*", ...params }));
+  if (!res.ok) throw new Error("wd");
+  return res.json();
+}
+const RADIO_WORDS = /radio|r[aá]dio|emisora|station|broadcast|cadena|estaci[oó]n|sender|rundfunk/i;
+async function wdFindLogo(name, cc) {
+  const r = await wdQuery({ action: "wbsearchentities", search: name, language: "es", uselang: "es", type: "item", limit: "6" });
+  const hits = (r.search || []).filter((h) => RADIO_WORDS.test(h.description || "") || RADIO_WORDS.test(h.label || ""));
+  if (!hits.length) return "";
+  const e = await wdQuery({ action: "wbgetentities", ids: hits.map((h) => h.id).join("|"), props: "claims" });
+  const val = (claims, p) => claims[p] && claims[p][0] && claims[p][0].mainsnak.datavalue && claims[p][0].mainsnak.datavalue.value;
+  const withLogo = [];
+  for (const h of hits) {
+    const claims = (e.entities && e.entities[h.id] && e.entities[h.id].claims) || {};
+    const logo = val(claims, "P154");
+    if (logo) withLogo.push({ logo, country: (val(claims, "P17") || {}).id });
+  }
+  if (!withLogo.length) return "";
+  // Si sabemos el país de la emisora, el de Wikidata tiene que coincidir (evita logos de otra emisora con el mismo nombre)
+  let pick = withLogo[0];
+  if (cc) {
+    const ids = [...new Set(withLogo.map((w) => w.country).filter(Boolean))];
+    const iso = {};
+    if (ids.length) {
+      const c = await wdQuery({ action: "wbgetentities", ids: ids.join("|"), props: "claims" });
+      for (const id of ids) iso[id] = (val((c.entities[id] || {}).claims || {}, "P297") || "").toUpperCase();
+    }
+    pick = withLogo.find((w) => !w.country || iso[w.country] === cc);
+    if (!pick) return "";
+  }
+  return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(pick.logo) + "?width=128";
+}
+async function wikidataLogo(st) {
+  const full = cleanStationName(st.name);
+  if (!full || full.length < 3) return "";
+  const cc = (st.countrycode || "").toUpperCase();
+  const key = cc + "|" + full;
+  if (key in wdCache) return wdCache[key];
+  let url = await wdRun(() => wdFindLogo(full, cc));
+  // Si no aparece, probamos con las dos primeras palabras (p. ej. "COPE Almería" → "COPE")
+  const words = full.split(" ");
+  const generic = /^(radio|r[aá]dio|la|el|los|las|the|fm|emisora|online|onda|super|top)$/i;
+  if (!url && url !== null && words.length > 2) url = await wdRun(() => wdFindLogo(words.slice(0, 2).join(" "), cc));
+  if (!url && url !== null && words.length >= 2 && words[0].length >= 3 && !generic.test(words[0])) url = await wdRun(() => wdFindLogo(words[0], cc));
+  if (url === null) return ""; // fallo de red: no lo guardamos para reintentar otro día
+  wdCache[key] = url || "";
+  wdSave();
+  return url || "";
+}
+async function wikidataInto(img, st) {
+  const id = img.dataset.logoFor;
+  const url = await wikidataLogo(st);
+  if (!url || img.dataset.logoFor !== id) return;
+  img.onload = null;
+  img.onerror = () => { img.onerror = null; img.src = initialsIcon(st.name); };
+  img.src = url;
 }
 function artworkUrl(st) {
   const list = logoCandidates(st);
@@ -682,7 +771,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.1";
+const APP_VERSION = "2.2";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 
