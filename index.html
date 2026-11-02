@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>GilaviRadio</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GilaviRadio">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>GilaviRadio</h1>
+    <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="home" class="active">Populares</button>
+    <button data-tab="search">Buscar</button>
+    <button data-tab="favs">Favoritas</button>
+  </nav>
+
+  <main>
+    <section id="tab-home" class="tab active">
+      <div class="filters">
+        <select id="homeCountry" aria-label="País"></select>
+      </div>
+      <ul id="homeList" class="list"></ul>
+      <button id="homeMore" class="more" hidden>Cargar más</button>
+    </section>
+
+    <section id="tab-search" class="tab">
+      <form id="searchForm" class="filters">
+        <input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off">
+        <select id="qCountry" aria-label="País"></select>
+        <select id="qTag" aria-label="Género"></select>
+        <button type="submit" class="primary">Buscar</button>
+      </form>
+      <ul id="searchList" class="list"></ul>
+      <button id="searchMore" class="more" hidden>Cargar más</button>
+    </section>
+
+    <section id="tab-favs" class="tab">
+      <p id="favsEmpty" class="empty">Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
+      <ul id="favsList" class="list"></ul>
+    </section>
+  </main>
+
+  <footer id="player" class="player" hidden>
+    <img id="pLogo" alt="">
+    <div class="pInfo">
+      <div id="pName" class="pName"></div>
+      <div id="pStatus" class="pStatus"></div>
+    </div>
+    <button id="pFav" class="icon" aria-label="Favorita">☆</button>
+    <button id="pToggle" class="icon big" aria-label="Reproducir">▶</button>
+  </footer>
+
+  <audio id="audio" preload="none"></audio>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
