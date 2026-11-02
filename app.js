@@ -813,7 +813,15 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.3";
+const APP_VERSION = "3.4";
+// Botón ✕ para borrar el nombre en Buscar
+(() => {
+  const q = $("qName"), x = $("qClear");
+  const paint = () => { x.hidden = !q.value; };
+  q.addEventListener("input", paint);
+  x.onclick = () => { q.value = ""; paint(); q.focus(); };
+  paint();
+})();
 // Actualiza votos/escuchas/tendencia de las favoritas (los datos guardados se quedan viejos)
 async function refreshFavStats() {
   if (!favs.length) return;

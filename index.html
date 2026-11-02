@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.3">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3.4">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=3.3">
+  <link rel="stylesheet" href="style.css?v=3.4">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=3.3" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=3.4" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -47,7 +47,7 @@
 
     <section id="tab-search" class="tab">
       <form id="searchForm" class="filters">
-        <input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off">
+        <div class="qWrap"><input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off"><button type="button" id="qClear" class="qClear" aria-label="Borrar" hidden>✕</button></div>
         <button type="button" id="qCountryBtn" class="pickBtn">Cualquier país</button>
         <button type="button" id="qTagBtn" class="pickBtn">Cualquier género</button>
         <button type="submit" class="primary half">Buscar</button>
@@ -171,7 +171,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=3.3"></script>
-  <script src="app.js?v=3.3"></script>
+  <script src="tz.js?v=3.4"></script>
+  <script src="app.js?v=3.4"></script>
 </body>
 </html>
