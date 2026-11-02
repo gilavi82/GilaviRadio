@@ -15,7 +15,8 @@ body {
 }
 button, input, select { font: inherit; color: inherit; }
 .top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 4px; }
-.top h1 { margin: 0; font-size: 28px; }
+.top h1 { margin: 0; font-size: 28px; display: flex; align-items: center; gap: 8px; }
+.appLogo { width: 34px; height: 34px; }
 .chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
 .chip.on { border-color: var(--accent); color: var(--accent); }
 
