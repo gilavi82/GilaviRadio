@@ -610,7 +610,9 @@ $("homeCountry").onchange = (e) => {
   store.set("homeCountry", e.target.value);
   home.search(e.target.value ? { countrycode: e.target.value } : {});
 };
+let lastSearchKind = "search";
 $("nearGo").onclick = async () => {
+  lastSearchKind = "near";
   document.activeElement.blur();
   $("rCard").hidden = true;
   const ul = $("searchList");
@@ -628,6 +630,7 @@ $("nearGo").onclick = async () => {
   else toast("Emisoras a menos de " + NEAR_KM + " km, de la más cercana a la más lejana");
 };
 $("searchForm").onsubmit = (e) => {
+  lastSearchKind = "search";
   e.preventDefault();
   document.activeElement.blur();
   $("rCard").hidden = true;
@@ -1150,7 +1153,22 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "6.1";
+const APP_VERSION = "6.2";
+// Buscar: plegar el buscador al bajar por la lista
+(() => {
+  const tab = $("tab-search"), sc = tab.querySelector(".scroll");
+  const fold = (on) => {
+    if (tab.classList.contains("folded") === on) return;
+    if (on) {
+      const f = searchFilters();
+      $("searchSummary").textContent = lastSearchKind === "near" ? "Cerca de mí" : lastSearchKind === "random" ? "Aleatoria en " + filtersText(f) : filtersText(f);
+    }
+    tab.classList.toggle("folded", on);
+    $("searchShow").hidden = !on;
+  };
+  sc.addEventListener("scroll", () => { if (sc.scrollTop > 40 && sc.scrollHeight > sc.clientHeight + 120) fold(true); }, { passive: true });
+  $("searchShow").onclick = () => { fold(false); sc.scrollTop = 0; };
+})();
 // ---------- Mapa de emisoras ----------
 // Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
@@ -1444,7 +1462,8 @@ async function nextRandom() {
     $("rMeta").textContent = "No se pudo conectar. Revisa tu conexión.";
   } finally { randomBusy = false; }
 }
-$("rGo").onclick = () => { document.activeElement.blur(); nextRandom(); };
+$("rGo").onclick = () => {
+  lastSearchKind = "random"; document.activeElement.blur(); nextRandom(); };
 $("rNext").onclick = nextRandom;
 $("rFav").onclick = () => current && toggleFav(current);
 
