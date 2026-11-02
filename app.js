@@ -65,6 +65,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 let favs = store.get("favs", []);
+// Emisoras que han sonado bien en esta sesión: se les quita el aviso de "caída" hasta reabrir la app
+const workedNow = new Set();
 let myVotes = store.get("myVotes", {}); // uuid → "on" | "off" (existir = ya enviado)
 
 const isFav = (id) => favs.some((f) => f.stationuuid === id);
@@ -691,7 +693,7 @@ function renderFavs() {
   const shown = listSort && !favSorting ? sortItems(inFolder.slice()) : inFolder;
   shown.forEach((st, i) => {
     const li = stationItem(st, shown);
-    if (st.lastcheckok === 0 || st.lastcheckok === "0") {
+    if ((st.lastcheckok === 0 || st.lastcheckok === "0") && !workedNow.has(st.stationuuid)) {
       const w = document.createElement("div");
       w.className = "stDown";
       const since = st.lastcheckoktime ? new Date(st.lastcheckoktime.endsWith("Z") ? st.lastcheckoktime : st.lastcheckoktime.replace(" ", "T") + "Z") : null;
@@ -885,6 +887,10 @@ function armStall(reason, ms) {
   }, ms);
 }
 audio.addEventListener("playing", () => {
+  if (current && !workedNow.has(current.stationuuid)) {
+    workedNow.add(current.stationuuid);
+    if (current.lastcheckok === 0 || current.lastcheckok === "0" || favs.some((f) => f.stationuuid === current.stationuuid && (f.lastcheckok === 0 || f.lastcheckok === "0"))) renderFavs();
+  }
   retries = 0; everPlayed = true; clearTimeout(stallTimer);
   setStatus(liveStatus()); setToggle(true);
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
@@ -1143,7 +1149,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.7";
+const APP_VERSION = "5.8";
 // ---------- Mapa de emisoras ----------
 // Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
