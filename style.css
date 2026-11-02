@@ -77,6 +77,14 @@ button, input, select { font: inherit; color: inherit; }
   padding-bottom: calc(4px + env(safe-area-inset-bottom)) !important;
 }
 .pInfo { flex: 1; min-width: 0; }
+.player { flex-wrap: wrap; row-gap: 4px; }
+/* Medidor estéreo (izquierda / derecha) con reflejo, abajo del todo */
+.vu { flex-basis: 100%; order: 99; padding: 0 2px; margin-bottom: 7px;
+  -webkit-box-reflect: below 1px linear-gradient(transparent 15%, rgba(255,255,255,.35)); }
+.vuRow { display: flex; gap: 2px; height: 3px; }
+.vuRow + .vuRow { margin-top: 2px; }
+.vuRow i { flex: 1; border-radius: 1px; background: rgba(148,163,184,.13); transition: background-color .06s; }
+.vuRow i.g { background: #22c55e; } .vuRow i.y { background: #eab308; } .vuRow i.r { background: #ef4444; }
 .player .icon { padding: 4px 6px; }
 .pName { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .voteIcon { display: inline-block; vertical-align: -0.12em; margin-right: 3px; font-size: 0.95em; }

@@ -1028,7 +1028,42 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.0";
+const APP_VERSION = "5.1";
+// ---------- Medidor estéreo (decorativo) ----------
+// El iPhone no deja analizar el sonido de las emisoras, así que el movimiento es simulado:
+// sube y baja con "golpes" aleatorios mientras suena, y se apaga en pausa.
+(() => {
+  const N = 32;
+  const rows = [...document.querySelectorAll("#vu .vuRow")];
+  const cells = rows.map((r) => Array.from({ length: N }, (_, i) => {
+    const el = document.createElement("i");
+    el.dataset.c = i < N * 0.6 ? "g" : i < N * 0.85 ? "y" : "r";
+    r.append(el); return el;
+  }));
+  const level = [0, 0], shown = [-1, -1];
+  let base = 0.55, t = 0;
+  const paint = (ch, n) => {
+    if (n === shown[ch]) return;
+    shown[ch] = n;
+    cells[ch].forEach((el, i) => { el.className = i < n ? el.dataset.c : ""; });
+  };
+  setInterval(() => {
+    const on = wantPlaying && !audio.paused && audio.readyState > 2 && !document.hidden && !$("player").hidden;
+    t++;
+    if (t % 25 === 0) base = 0.4 + Math.random() * 0.35;        // cambia la "intensidad" de la canción
+    for (let ch = 0; ch < 2; ch++) {
+      let target = 0;
+      if (on) {
+        target = base + (Math.random() - 0.5) * 0.35;
+        if (Math.random() < 0.12) target += 0.25 + Math.random() * 0.2; // golpe
+        target = Math.max(0.05, Math.min(1, target));
+      }
+      // sube rápido, baja despacio, como un medidor de verdad
+      level[ch] = target > level[ch] ? level[ch] + (target - level[ch]) * 0.7 : level[ch] - Math.min(level[ch] - target, 0.06);
+      paint(ch, Math.round(level[ch] * N));
+    }
+  }, 70);
+})();
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");

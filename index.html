@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.0">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.1">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=5.0">
+  <link rel="stylesheet" href="style.css?v=5.1">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=5.0" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=5.1" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -91,6 +91,7 @@
     <button id="pVote" class="icon voteBtn" aria-label="Votar esta emisora"></button>
     <button id="pFav" class="icon" aria-label="Favorita">☆</button>
     <button id="pToggle" class="icon big" aria-label="Reproducir">▶</button>
+    <div id="vu" class="vu" aria-hidden="true"><div class="vuRow"></div><div class="vuRow"></div></div>
   </footer>
 
   <div id="info" class="sheet" hidden>
@@ -190,7 +191,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=5.0"></script>
-  <script src="app.js?v=5.0"></script>
+  <script src="tz.js?v=5.1"></script>
+  <script src="app.js?v=5.1"></script>
 </body>
 </html>
