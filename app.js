@@ -771,7 +771,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.2";
+const APP_VERSION = "2.3";
 let stats = store.get("stats", null) || { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
 let listenStart = 0, listenStation = null;
 

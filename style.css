@@ -37,7 +37,7 @@ button, input, select { font: inherit; color: inherit; }
 .list { list-style: none; margin: 0; padding: 0; }
 .st { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .st.playing .stName { color: var(--accent); }
-.st img, .player img { width: 48px; height: 48px; border-radius: 10px; background: var(--card); object-fit: cover; flex: none; }
+.st img, .player img { width: 48px; height: 48px; border-radius: 10px; background: #fff; object-fit: contain; flex: none; }
 .stMain { flex: 1; min-width: 0; }
 .stName { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stMeta { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -86,7 +86,7 @@ button, input, select { font: inherit; color: inherit; }
 .danger { color: #f87171; }
 
 .rCard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 16px 16px; text-align: center; margin: 0 0 12px; position: relative; }
-.rLogo { width: 96px; height: 96px; border-radius: 20px; object-fit: cover; background: var(--bg); }
+.rLogo { width: 96px; height: 96px; border-radius: 20px; object-fit: contain; background: #fff; }
 .rName { font-size: 22px; font-weight: 700; margin-top: 14px; overflow-wrap: anywhere; }
 .rMeta { color: var(--muted); font-size: 14px; margin-top: 6px; }
 .rFav { position: absolute; top: 8px; right: 8px; font-size: 26px; }
@@ -121,7 +121,7 @@ button, input, select { font: inherit; color: inherit; }
 .pInfo, #pLogo { cursor: pointer; }
 .pName::after { content: " ⓘ"; color: var(--muted); font-weight: 400; font-size: 13px; }
 .stHead { display: flex; gap: 14px; align-items: center; margin: 16px 0 8px; }
-.stHead img { width: 72px; height: 72px; border-radius: 14px; object-fit: cover; background: var(--card); flex: none; }
+.stHead img { width: 72px; height: 72px; border-radius: 14px; object-fit: contain; background: #fff; flex: none; }
 .stHead .n { font-size: 20px; font-weight: 700; overflow-wrap: anywhere; }
 .kv { list-style: none; margin: 0; padding: 0; }
 .kv li { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
