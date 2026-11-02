@@ -1086,7 +1086,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "7.3";
+const APP_VERSION = "7.4";
 
 // Buscar: plegar el buscador al bajar por la lista
 (() => {
