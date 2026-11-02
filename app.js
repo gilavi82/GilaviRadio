@@ -42,7 +42,7 @@ function slim(s) {
     url_resolved: s.url_resolved.replace(/^http:\/\//i, "https://"),
     httpOnly: /^http:\/\//i.test(s.url_resolved),
     favicon: s.favicon, country: s.country, countrycode: s.countrycode,
-    tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls, clickcount: s.clickcount || 0,
+    tags: s.tags, codec: s.codec, bitrate: s.bitrate, hls: s.hls, clickcount: s.clickcount || 0, votes: s.votes || 0, clicktrend: s.clicktrend || 0,
     geo_lat: s.geo_lat, geo_long: s.geo_long,
     badCodec: BAD_CODECS.some((c) => (s.codec || "").toUpperCase().includes(c)),
   };
@@ -204,6 +204,19 @@ function meta(st) {
   return [countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
 }
 
+function fmtNum(n) {
+  n = Number(n) || 0;
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(".0", "").replace(".", ",") + " M";
+  if (n >= 1e4) return Math.round(n / 1e3) + " mil";
+  return n.toLocaleString("es-ES");
+}
+// Indicadores de popularidad de Radio Browser: votos, escuchas (clics) y tendencia de escuchas
+function popText(st) {
+  if (st.votes == null && st.clickcount == null) return "";
+  const t = Number(st.clicktrend) || 0;
+  const trend = t > 0 ? "▲ +" + fmtNum(t) : t < 0 ? "▼ −" + fmtNum(-t) : "= 0";
+  return "👍 " + fmtNum(st.votes) + " votos · 🎧 " + fmtNum(st.clickcount) + " escuchas · " + trend;
+}
 function stationItem(st, list) {
   const li = document.createElement("li");
   li.className = "st";
@@ -213,9 +226,11 @@ function stationItem(st, list) {
   setLogo(img, st);
   const main = document.createElement("div");
   main.className = "stMain";
-  main.innerHTML = `<div class="stName"></div><div class="stMeta"></div>`;
-  main.firstChild.textContent = st.name;
-  main.lastChild.textContent = meta(st);
+  main.innerHTML = `<div class="stName"></div><div class="stMeta"></div><div class="stPop"></div>`;
+  main.children[0].textContent = st.name;
+  main.children[1].textContent = meta(st);
+  const pop = popText(st);
+  if (pop) main.children[2].textContent = pop; else main.children[2].remove();
   const fav = document.createElement("button");
   fav.className = "icon favBtn";
   fav.setAttribute("aria-label", "Favorita");
@@ -767,7 +782,25 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "2.7";
+const APP_VERSION = "2.8";
+// Actualiza votos/escuchas/tendencia de las favoritas (los datos guardados se quedan viejos)
+async function refreshFavStats() {
+  if (!favs.length) return;
+  const ids = favs.map((f) => f.stationuuid);
+  const fresh = {};
+  for (let i = 0; i < ids.length; i += 50) {
+    try { (await api("stations/byuuid", { uuids: ids.slice(i, i + 50).join(",") })).forEach((d) => { fresh[d.stationuuid] = d; }); } catch { return; }
+  }
+  let changed = false;
+  for (const f of favs) {
+    const d = fresh[f.stationuuid];
+    if (!d) continue;
+    f.votes = d.votes || 0; f.clickcount = d.clickcount || 0; f.clicktrend = d.clicktrend || 0;
+    changed = true;
+  }
+  if (changed && !favSorting) { store.set("favs", favs); renderFavs(); refreshListsState(); }
+}
+setTimeout(refreshFavStats, 1500);
 // La barra "Editar orden" va fija justo encima de la barra de reproducción
 (() => {
   const pl = $("player");
@@ -895,7 +928,7 @@ function filtersText(f) {
 function showRandomCard(st) {
   $("rCard").hidden = false;
   $("rName").textContent = st.name;
-  $("rMeta").textContent = meta(st) || " ";
+  $("rMeta").textContent = [meta(st), popText(st)].filter(Boolean).join("\n") || " ";
   setLogo($("rLogo"), st);
   refreshListsState();
 }
