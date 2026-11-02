@@ -102,7 +102,12 @@ function initialsIcon(name) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="hsl(${h},55%,42%)"/><text x="48" y="50" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="38" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="middle">${ini.replace(/[<&>]/g, "")}</text></svg>`;
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
+// Logos elegidos por ti (copiados de Google) — se guardan solo en este iPhone
+let myLogos = store.get("myLogos", {});
 function setLogo(img, st) {
+  img.dataset.logoFor = st.stationuuid || st.name;
+  const mine = myLogos[st.stationuuid];
+  if (mine) { img.onload = null; img.onerror = () => { img.onerror = null; img.src = initialsIcon(st.name); }; img.src = mine; return; }
   const list = logoCandidates(st);
   let i = 0;
   img.dataset.logoFor = st.stationuuid || st.name;
@@ -196,6 +201,7 @@ async function wikidataInto(img, st) {
   img.src = url;
 }
 function artworkUrl(st) {
+  if (myLogos[st.stationuuid]) return myLogos[st.stationuuid];
   const list = logoCandidates(st);
   return list.length ? list[1] : new URL("icons/icon-512.png", location.href).href;
 }
@@ -826,8 +832,11 @@ function fmtDate(s) {
   const d = new Date(s.endsWith("Z") ? s : s.replace(" ", "T") + "Z");
   return isNaN(d) ? s : d.toLocaleString("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
+let stShown = null;
 async function openStationInfo(st) {
   if (!st) return;
+  stShown = st;
+  $("stLogoReset").hidden = !myLogos[st.stationuuid];
   $("stSheet").hidden = false;
   $("stName").textContent = st.name;
   setLogo($("stLogo"), st);
@@ -875,12 +884,70 @@ async function openStationInfo(st) {
   }
 }
 $("stClose").onclick = () => { $("stSheet").hidden = true; };
+
+// ---------- Logo propio desde Google ----------
+$("stGoogle").onclick = () => {
+  if (!stShown) return;
+  const q = 'logo cuadrado "' + stShown.name + '"';
+  window.open("https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(q), "_blank", "noopener");
+};
+function blobToLogo(blob) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(blob);
+    const im = new Image();
+    im.onload = () => {
+      const S = 160, c = document.createElement("canvas");
+      c.width = c.height = S;
+      const k = Math.min(S / im.naturalWidth, S / im.naturalHeight);
+      const w = im.naturalWidth * k, h = im.naturalHeight * k;
+      const g = c.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0, 0, S, S);
+      g.drawImage(im, (S - w) / 2, (S - h) / 2, w, h);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg", 0.85));
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("img")); };
+    im.src = url;
+  });
+}
+function saveMyLogo(st, src) {
+  if (src) myLogos[st.stationuuid] = src; else delete myLogos[st.stationuuid];
+  store.set("myLogos", myLogos);
+  // Repinta todas las imágenes de esa emisora (listas, reproductor, ficha)
+  document.querySelectorAll("img").forEach((img) => { if (img.dataset.logoFor === st.stationuuid) setLogo(img, st); });
+  if (current && current.stationuuid === st.stationuuid) updateMediaSession();
+  $("stLogoReset").hidden = !src;
+}
+$("stPaste").onclick = async () => {
+  const st = stShown;
+  if (!st) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.read) {
+      const items = await navigator.clipboard.read();
+      for (const it of items) {
+        const type = it.types.find((t) => t.startsWith("image/"));
+        if (type) { saveMyLogo(st, await blobToLogo(await it.getType(type))); toast("Logo guardado"); return; }
+        if (it.types.includes("text/plain")) {
+          const txt = (await (await it.getType("text/plain")).text()).trim();
+          if (/^https?:\/\/\S+$/i.test(txt)) { saveMyLogo(st, txt.replace(/^http:/i, "https:")); toast("Logo guardado"); return; }
+        }
+      }
+    } else if (navigator.clipboard && navigator.clipboard.readText) {
+      const txt = (await navigator.clipboard.readText()).trim();
+      if (/^https?:\/\/\S+$/i.test(txt)) { saveMyLogo(st, txt.replace(/^http:/i, "https:")); toast("Logo guardado"); return; }
+    }
+    toast("No hay ninguna imagen copiada. En Google, mantén el dedo sobre el logo y pulsa Copiar.");
+  } catch {
+    toast("No se pudo leer lo copiado. Pulsa \"Pegar\" cuando el iPhone lo pregunte.");
+  }
+};
+$("stLogoReset").onclick = () => { if (stShown) { saveMyLogo(stShown, null); toast("Vuelve el logo de antes"); } };
 $("pLogo").addEventListener("click", () => openStationInfo(current));
 document.querySelector(".pInfo").addEventListener("click", () => openStationInfo(current));
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "3.7";
+const APP_VERSION = "3.8";
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
   const q = $("qName"), x = $("qClear");
