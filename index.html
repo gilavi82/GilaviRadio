@@ -9,13 +9,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.3">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=5.4">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=5.3">
+  <link rel="stylesheet" href="style.css?v=5.4">
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=5.3" class="appLogo" alt="">GilaviRadio</h1>
+    <h1><img src="icons/logo.svg?v=5.4" class="appLogo" alt="">GilaviRadio</h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -74,6 +74,8 @@
 
     <section id="tab-favs" class="tab">
       <p id="favHelp" class="small" hidden>Mantén el dedo en ≡ y arrastra cada emisora a su sitio (o usa A–Z / Más escuchadas). Después pulsa Guardar.</p>
+      <div id="folderBar" class="folderBar" hidden></div>
+      <p id="folderEmpty" class="empty" hidden>Esta carpeta está vacía. Para añadir una emisora, ponla, toca su nombre en el reproductor y elige esta carpeta en su ficha. Toca otra vez la carpeta para cambiarle el nombre o borrarla.</p>
       <p id="favsEmpty" class="empty">Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
       <ul id="favsList" class="list"></ul>
       <div id="favBar" class="favBar" hidden>
@@ -145,6 +147,7 @@
       <button id="stClose" class="chip">Cerrar</button>
     </div>
     <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div></div>
+    <label id="stFolderRow" class="stFolderRow" hidden>📁 Carpeta <select id="stFolder"></select></label>
     <nav class="stTabs">
       <button data-st="rel" class="active">Relacionadas</button>
       <button data-st="info">Info</button>
@@ -197,7 +200,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=5.3"></script>
-  <script src="app.js?v=5.3"></script>
+  <script src="tz.js?v=5.4"></script>
+  <script src="app.js?v=5.4"></script>
 </body>
 </html>
