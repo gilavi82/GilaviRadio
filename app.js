@@ -624,7 +624,7 @@ $("nearGo").onclick = async () => {
     return;
   }
   await results.search({ near });
-  if (!ul.querySelector(".st")) ul.innerHTML = `<li class="msg">No hay emisoras con ubicación a menos de ${NEAR_KM} km de ti en Radio Browser.</li>`;
+  if (!ul.querySelector(".st")) ul.innerHTML = `<li class="msg">No hay emisoras con ubicación conocida a menos de ${NEAR_KM} km de ti.</li>`;
   else toast("Emisoras a menos de " + NEAR_KM + " km, de la más cercana a la más lejana");
 };
 $("searchForm").onsubmit = (e) => {
@@ -698,7 +698,7 @@ function renderFavs() {
       w.className = "stDown";
       const since = st.lastcheckoktime ? new Date(st.lastcheckoktime.endsWith("Z") ? st.lastcheckoktime : st.lastcheckoktime.replace(" ", "T") + "Z") : null;
       const days = since && !isNaN(since) ? Math.floor((Date.now() - since) / 86400000) : null;
-      w.textContent = "⚠️ Caída según Radio Browser" + (days == null ? "" : days < 1 ? " · funcionaba hoy" : days === 1 ? " · funcionaba ayer" : ` · no funciona desde hace ${days} días`);
+      w.textContent = "⚠️ Parece caída" + (days == null ? "" : days < 1 ? " · funcionaba hoy" : days === 1 ? " · funcionaba ayer" : ` · no funciona desde hace ${days} días`);
       const main = li.querySelector(".stMain");
       if (main) main.append(w);
       li.classList.add("down");
@@ -1149,7 +1149,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "5.8";
+const APP_VERSION = "5.9";
 // ---------- Mapa de emisoras ----------
 // Leaflet (mapas libres) va dentro de la app, en vendor/. El fondo es OpenStreetMap (gratis, sin clave).
 // Radio Browser no busca por zona del mapa, así que buscamos alrededor del centro de lo que ves.
@@ -1187,7 +1187,7 @@ function addMapStations(list) {
     mapLayer.addLayer(m);
     added++;
   }
-  $("mapHint").textContent = `${mapMarkers.size} emisoras en el mapa. Solo salen las que tienen su ubicación en Radio Browser. Mueve o acerca el mapa para cargar más.`;
+  $("mapHint").textContent = `${mapMarkers.size} emisoras en el mapa. Solo salen las que tienen ubicación conocida. Mueve o acerca el mapa para cargar más.`;
   return added;
 }
 let mapTimer = null, mapWorldLoaded = false;
@@ -1470,7 +1470,7 @@ $("pVote").onclick = async () => {
   const id = st.stationuuid, state = myVotes[id];
   if (state === "on") {
     myVotes[id] = "off"; store.set("myVotes", myVotes); paintVote();
-    toast("Voto quitado en la app. Radio Browser no deja borrar votos, allí se queda.");
+    toast("Voto quitado. El voto ya enviado no se puede borrar, sigue contando.");
     return;
   }
   if (state === "off") {
@@ -1487,8 +1487,8 @@ $("pVote").onclick = async () => {
       st.votes = (Number(st.votes) || 0) + 1;
       setPop(st);
       document.querySelectorAll(".st").forEach((li) => { if (li.dataset.id === id) { const p = li.querySelector(".stPop"); if (p) fillPop(p, st); } });
-      toast("¡Voto enviado a Radio Browser!");
-    } else toast("Radio Browser dice: " + ((r && r.message) || "no se pudo votar ahora"));
+      toast("¡Voto enviado!");
+    } else toast("No se pudo votar ahora. Inténtalo más tarde.");
   } catch {
     toast("No se pudo enviar el voto. Revisa tu conexión.");
   } finally { b.disabled = false; paintVote(); }
