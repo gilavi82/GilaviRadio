@@ -893,7 +893,7 @@ function stationLocalTime(st) {
   if (!z) return "";
   try {
     const t = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: z.tz });
-    return `🕐 ${t} en ${countryName(st)}${z.approx ? " (aprox.)" : ""}`;
+    return `${t} en ${countryName(st)}${z.approx ? " (aprox.)" : ""}`;
   } catch { return ""; }
 }
 function liveStatus() {
@@ -929,7 +929,7 @@ async function openStationInfo(st) {
   const yes = (v) => (v === 1 || v === true || v === "1" ? "Sí" : v === 0 || v === false || v === "0" ? "No" : "");
   const z = stationTz(d);
   const rows = [
-    ["Hora local", stationLocalTime(d).replace("🕐 ", "")],
+    ["Hora local", stationLocalTime(d)],
     ["País", countryName(d)],
     ["Región / provincia", d.state],
     ["Idioma", d.language],
@@ -1103,7 +1103,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.7";
+const APP_VERSION = "1.0.8";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
