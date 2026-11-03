@@ -186,6 +186,62 @@ async function wdFindLogo(name, cc) {
   }
   return "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(pick.logo) + "?width=128";
 }
+// ---------- Frecuencia FM ----------
+// No viene en los datos de la emisora: se saca del nombre/etiquetas ("Radio X 98.5 FM") o de Wikidata (P2144)
+function freqFromText(st) {
+  const txt = (st.name || "") + " " + (st.tags || "");
+  const m = txt.match(/(?:^|[^\d.,])((?:8[7-9]|9\d|10[0-7])[.,]\d{1,2})(?![\d.,]*\d)/);
+  return m ? parseFloat(m[1].replace(",", ".")).toFixed(1) + " FM" : "";
+}
+function fmtFreq(amount) {
+  let n = Math.abs(parseFloat(amount));
+  if (!isFinite(n) || !n) return "";
+  if (n >= 1e5) n = n >= 8.7e7 ? n / 1e6 : n / 1e3; // en hercios → MHz (FM) o kHz (AM)
+  if (n >= 87 && n <= 108.1) return n.toFixed(1) + " FM";
+  if (n >= 150 && n <= 30000) return Math.round(n) + " kHz AM";
+  return "";
+}
+async function wdFindFreq(name, cc) {
+  const r = await wdQuery({ action: "wbsearchentities", search: name, language: "es", uselang: "es", type: "item", limit: "6" });
+  const hits = (r.search || []).filter((h) => RADIO_WORDS.test(h.description || "") || RADIO_WORDS.test(h.label || ""));
+  if (!hits.length) return "";
+  const e = await wdQuery({ action: "wbgetentities", ids: hits.map((h) => h.id).join("|"), props: "claims" });
+  const val = (claims, p) => claims[p] && claims[p][0] && claims[p][0].mainsnak.datavalue && claims[p][0].mainsnak.datavalue.value;
+  const found = [];
+  for (const h of hits) {
+    const claims = (e.entities && e.entities[h.id] && e.entities[h.id].claims) || {};
+    const fr = (claims.P2144 || []).map((c) => c.mainsnak && c.mainsnak.datavalue && fmtFreq(c.mainsnak.datavalue.value.amount)).filter(Boolean);
+    if (fr.length) found.push({ fr: [...new Set(fr)], country: (val(claims, "P17") || {}).id });
+  }
+  if (!found.length) return "";
+  let pick = found[0];
+  if (cc) {
+    const ids = [...new Set(found.map((w) => w.country).filter(Boolean))];
+    const iso = {};
+    if (ids.length) {
+      const c = await wdQuery({ action: "wbgetentities", ids: ids.join("|"), props: "claims" });
+      for (const id of ids) iso[id] = (val((c.entities[id] || {}).claims || {}, "P297") || "").toUpperCase();
+    }
+    pick = found.find((w) => !w.country || iso[w.country] === cc);
+    if (!pick) return "";
+  }
+  const f = pick.fr;
+  return f.slice(0, 4).join(" · ") + (f.length > 4 ? ` y ${f.length - 4} más` : "");
+}
+const wdFreqCache = (() => { try { return JSON.parse(localStorage.getItem("wdFreq") || "{}"); } catch { return {}; } })();
+async function stationFreq(st) {
+  const t = freqFromText(st);
+  if (t) return t;
+  const full = cleanStationName(st.name);
+  if (!full || full.length < 3) return "";
+  const key = (st.countrycode || "").toUpperCase() + "|" + full;
+  if (key in wdFreqCache) return wdFreqCache[key];
+  const f = await wdRun(() => wdFindFreq(full, (st.countrycode || "").toUpperCase()));
+  if (f === null) return ""; // fallo de red: se reintenta otro día
+  wdFreqCache[key] = f || "";
+  try { localStorage.setItem("wdFreq", JSON.stringify(wdFreqCache)); } catch {}
+  return f || "";
+}
 async function wikidataLogo(st) {
   const full = cleanStationName(st.name);
   if (!full || full.length < 3) return "";
@@ -928,7 +984,10 @@ async function openStationInfo(st) {
   try { const r = await api("stations/byuuid/" + st.stationuuid); if (r && r[0]) d = r[0]; } catch {}
   const yes = (v) => (v === 1 || v === true || v === "1" ? "Sí" : v === 0 || v === false || v === "0" ? "No" : "");
   const z = stationTz(d);
+  const freq = await Promise.race([stationFreq(d).catch(() => ""), new Promise((r) => setTimeout(() => r(""), 4000))]);
+  if (stShown !== st) return;
   const rows = [
+    ["Frecuencia", freq],
     ["Hora local", stationLocalTime(d)],
     ["País", countryName(d)],
     ["Región / provincia", d.state],
@@ -1103,7 +1162,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.8";
+const APP_VERSION = "1.0.9";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
