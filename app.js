@@ -48,7 +48,8 @@ function slim(s) {
   };
 }
 let listSort = (() => { try { return JSON.parse(localStorage.getItem("listSort")) || ""; } catch { return ""; } })();
-// Orden de las listas (barra bajo las pestañas): votes, clickcount o clicktrend
+if (listSort === "clicktrend") listSort = "";
+// Orden de las listas (barra bajo las pestañas): votes o clickcount
 function sortKey() { return listSort || "clickcount"; }
 function sortItems(arr) { const k = sortKey(); return arr.sort((a, b) => (Number(b[k]) || 0) - (Number(a[k]) || 0)); }
 async function searchStations(params, offset) {
@@ -226,14 +227,13 @@ function fmtNum(n) {
   if (n >= 1e4) return Math.round(n / 1e3) + " mil";
   return n.toLocaleString("es-ES");
 }
-// Indicadores de popularidad de Radio Browser: votos, escuchas (clics) y tendencia de escuchas
+// Indicadores de popularidad: votos y escuchas (la tendencia se quitó: era casi igual que las escuchas)
 // Mano (me gusta) monocroma: usa el color del texto
 const THUMB_SVG = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M2 21h4V9H2v12zm20-11a2 2 0 0 0-2-2h-6.3l.95-4.57.03-.32a1.5 1.5 0 0 0-.44-1.06L13.17 1 6.59 7.59A1.96 1.96 0 0 0 6 9v10a2 2 0 0 0 2 2h9a2 2 0 0 0 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>';
 const HEADPHONES_SVG = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h2a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1H5v-1a7 7 0 0 1 14 0v1h-2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z"/></svg>';
 function fillPop(el, st) {
   el.textContent = "";
   if (st.votes == null && st.clickcount == null) return false;
-  const t = Number(st.clicktrend) || 0;
   const hand = document.createElement("span");
   hand.className = "voteIcon";
   hand.setAttribute("aria-label", "votos");
@@ -242,11 +242,7 @@ function fillPop(el, st) {
   ears.className = "voteIcon";
   ears.setAttribute("aria-label", "escuchas");
   ears.innerHTML = HEADPHONES_SVG;
-  el.append(hand, fmtNum(st.votes) + " · ", ears, fmtNum(st.clickcount) + " · ");
-  const tr = document.createElement("span");
-  tr.className = t > 0 ? "trendUp" : t < 0 ? "trendDown" : "";
-  tr.textContent = t > 0 ? "▲ +" + fmtNum(t) : t < 0 ? "▼ −" + fmtNum(-t) : "= 0";
-  el.append(tr);
+  el.append(hand, fmtNum(st.votes) + " · ", ears, fmtNum(st.clickcount));
   return true;
 }
 function stationItem(st, list) {
@@ -949,7 +945,6 @@ async function openStationInfo(st) {
     ["Último funcionamiento correcto", fmtDate(d.lastcheckoktime_iso8601 || d.lastcheckoktime)],
     ["Último cambio de datos", fmtDate(d.lastchangetime_iso8601 || d.lastchangetime)],
     ["Clics (popularidad)", d.clickcount != null ? String(d.clickcount) : ""],
-    ["Tendencia de clics", d.clicktrend != null ? (d.clicktrend > 0 ? "▲ +" : d.clicktrend < 0 ? "▼ " : "") + d.clicktrend : ""],
     ["Votos", d.votes != null ? String(d.votes) : ""],
     ["Zona horaria", z ? z.tz : ""],
     ["Coordenadas", isFinite(parseFloat(d.geo_lat)) && isFinite(parseFloat(d.geo_long)) ? { link: `https://www.openstreetmap.org/?mlat=${d.geo_lat}&mlon=${d.geo_long}#map=8/${d.geo_lat}/${d.geo_long}`, text: `${(+d.geo_lat).toFixed(3)}, ${(+d.geo_long).toFixed(3)} (ver mapa)` } : ""],
@@ -1108,7 +1103,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.6";
+const APP_VERSION = "1.0.7";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
