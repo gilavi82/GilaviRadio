@@ -239,10 +239,5 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 .rank li.playable span:first-child { color: var(--text, inherit); }
 .rank li.playable:active { background: var(--card); }
 .rankLogo { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; background: #fff; flex: none; align-self: center; margin-right: -4px; }
-/* Franja FREE TO WORLD bajo el nombre; su borde inferior coincide con el final del naranja del icono */
-.top h1 { align-items: flex-start; }
-.top h1 .appLogo { flex: none; width: 38px; height: 38px; }
-.ttlCol { display: flex; flex-direction: column; justify-content: space-between; height: 36px; min-width: 0; }
-.ttlName { display: flex; align-items: baseline; height: 22px; line-height: 22px; }
-.ttlName .hdrVer { align-self: baseline; margin: 0 0 0 4px; }
-.ftwStrip { align-self: flex-start; box-sizing: border-box; height: 13.67px; padding: 1.6px 17.67px 0 4px; font-size: 8.5px; font-weight: 800; line-height: 13.67px; letter-spacing: 1.8px; color: #1d4ed8; background: #fff; white-space: nowrap; clip-path: polygon(0 0, 100% 0, calc(100% - 13.67px) 100%, 0 100%); }
+/* Icono de la cabecera = icono de la app (con la franja FTW) */
+.top h1 .appLogo { flex: none; width: 38px; height: 38px; border-radius: 9px; }
