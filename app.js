@@ -1166,7 +1166,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.16";
+const APP_VERSION = "1.0.17";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1246,7 +1246,7 @@ async function openMap() {
     // OpenStreetMap: gratis y sin clave. Se oscurece con un filtro CSS para que vaya con la app.
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, className: "darkTiles",
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
     }).addTo(map);
     // Al tocar un grupo no se acerca el mapa: se abre la lista de sus emisoras
     // (muchas emisoras comparten la misma ubicación y el grupo nunca se separaría)

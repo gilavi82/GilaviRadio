@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.16">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.17">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=1.0.16">
+  <link rel="stylesheet" href="style.css?v=1.0.17">
   <script>
     // En la app de pantalla de inicio del iPhone, el alto que da el navegador a veces no incluye
     // la zona de la hora (unos 47 px) y la app se queda corta por abajo. Usamos el alto real de la pantalla.
@@ -35,7 +35,7 @@
 </head>
 <body>
   <header class="top">
-    <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.16" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
+    <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.17" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador" data-i18n-title>⏾ <span id="sleepLabel" data-i18n>Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial" data-i18n-aria>i</button>
@@ -133,7 +133,7 @@
 
   <div id="info" class="sheet" hidden>
     <div class="sheetHead">
-      <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.16" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
+      <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.17" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
       <button id="infoClose" class="chip" data-i18n>Cerrar</button>
     </div>
     <nav class="stTabs infoTabs">
@@ -163,6 +163,11 @@
     <div class="ftw"><b>Free to World (FTW)</b><p data-i18n>GilaviRadio es una app totalmente gratuita y libre de anuncios, hecha para que cualquiera pueda usarla sin gasto alguno. Eso es lo que significa la franja azul «FTW» del icono.</p></div>
     <p class="small" data-i18n-html="Las emisoras vienen de {0}, una base de datos abierta mantenida por voluntarios.">Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
     <p class="small" data-i18n>Tus favoritas y tu historial se guardan solo en este iPhone. Si borras la app de la pantalla de inicio, se pierden.</p>
+    <h3 data-i18n>Avisos legales</h3>
+    <p class="small" data-i18n>GilaviRadio no tiene cuentas, anuncios ni seguimiento. Solo se conecta al directorio de emisoras, a las propias emisoras y a servicios de mapas y logos.</p>
+    <p class="small" data-i18n>Los nombres y logos de las emisoras pertenecen a sus dueños. GilaviRadio no tiene relación con ellas: el audio lo emite cada emisora desde sus propios servidores.</p>
+    <p class="small" data-i18n-html="Mapa: {0}, con {1}. Código de la app con licencia {2}.">Mapa: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>, con <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>. Código de la app con licencia <a href="https://github.com/gilavi82/GilaviRadio/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a>.</p>
+    <p class="small"><a href="privacidad.html" target="_blank" rel="noopener" data-i18n>Política de privacidad</a></p>
     <label class="langPick"><span data-i18n>Idioma de la app</span><select id="langSel"></select></label>
     <p class="small"><span data-i18n>Versión</span> <span id="appVersion"></span></p>
     <button id="appRefresh" class="primary refreshBtn" data-i18n>↻ Actualizar la app</button>
@@ -238,7 +243,7 @@
   <div id="sleepSheet" class="sheet" hidden>
     <div>
       <div class="sheetHead">
-        <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.16" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
+        <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.17" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
         <button id="sleepClose" class="chip" data-i18n>Cerrar</button>
       </div>
       <h2 class="sheetTitle" data-i18n>Apagar la radio</h2>
@@ -267,8 +272,8 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="i18n.js?v=1.0.16"></script>
-  <script src="tz.js?v=1.0.16"></script>
-  <script src="app.js?v=1.0.16"></script>
+  <script src="i18n.js?v=1.0.17"></script>
+  <script src="tz.js?v=1.0.17"></script>
+  <script src="app.js?v=1.0.17"></script>
 </body>
 </html>
