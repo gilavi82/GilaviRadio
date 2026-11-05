@@ -253,3 +253,6 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 /* Árabe (de derecha a izquierda): el mapa y los números de versión siguen de izquierda a derecha */
 #map, .leaflet-container { direction: ltr; }
 [dir="rtl"] .hdrVer, [dir="rtl"] #appVersion { direction: ltr; unicode-bidi: isolate; }
+/* Pestañas de Info a la misma altura y tamaño que el menú principal */
+.infoTabs { margin: 12px 0 10px; }
+.infoTabs button { padding: 10px 0; font-size: 15px; min-width: 0; }
