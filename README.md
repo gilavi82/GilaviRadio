@@ -24,3 +24,14 @@ Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base
 - Botón Aleatoria dentro de Buscar: emisora al azar con esos filtros, con botón Siguiente.
 - Pantalla de información con historial: horas de escucha, emisoras y países.
 - En 11 idiomas (español, inglés, francés, portugués, alemán, chino, hindi, árabe, bengalí, ruso y japonés): usa el del iPhone, o se elige en Info. Si el del iPhone no está, sale en español.
+
+## Privacidad
+GilaviRadio no tiene cuentas, anuncios, analíticas ni seguimiento. Favoritas, historial y ajustes se guardan solo en el dispositivo. Detalles en la [política de privacidad](https://gilavi82.github.io/GilaviRadio/privacidad.html).
+
+## Avisos legales
+- Los nombres y logos de las emisoras pertenecen a sus dueños. GilaviRadio no tiene relación con ellas; el audio lo emite cada emisora desde sus propios servidores.
+- Datos de emisoras: [Radio Browser](https://www.radio-browser.info).
+- Mapa: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (licencia ODbL), con [Leaflet](https://leafletjs.com) (BSD-2) y Leaflet.markercluster (MIT). Sus licencias están en `vendor/leaflet/`.
+
+## Licencia
+El código de GilaviRadio tiene licencia [MIT](LICENSE). Las librerías de `vendor/` mantienen la suya.
