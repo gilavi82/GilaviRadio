@@ -1025,12 +1025,12 @@ async function openStationInfo(st) {
 }
 $("stClose").onclick = () => { $("stSheet").hidden = true; };
 function showStTab(which) {
-  document.querySelectorAll(".stTabs button").forEach((b) => b.classList.toggle("active", b.dataset.st === which));
+  document.querySelectorAll("#stSheet .stTabs button").forEach((b) => b.classList.toggle("active", b.dataset.st === which));
   $("stPaneInfo").hidden = which !== "info";
   $("stPaneRel").hidden = which !== "rel";
   $("stPaneInfo").scrollTop = 0; $("relScroll").scrollTop = 0; $("relTop").hidden = true;
 }
-document.querySelectorAll(".stTabs button").forEach((b) => { b.onclick = () => showStTab(b.dataset.st); });
+document.querySelectorAll("#stSheet .stTabs button").forEach((b) => { b.onclick = () => showStTab(b.dataset.st); });
 
 // ---------- Emisoras relacionadas ----------
 // Radio Browser no tiene "relacionadas", así que las deducimos:
@@ -1162,7 +1162,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.12";
+const APP_VERSION = "1.0.13";
 $("hdrVer").textContent = "v" + APP_VERSION.split(".").slice(0, 2).join(".");
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1473,7 +1473,14 @@ async function playFromHistory(id) {
   $("info").hidden = true;
   play(st, [st]);
 }
-$("infoBtn").onclick = () => { renderInfo(); $("info").hidden = false; };
+function showInfoTab(which) {
+  document.querySelectorAll(".infoTabs button").forEach((b) => b.classList.toggle("active", b.dataset.it === which));
+  $("infoPaneHist").hidden = which !== "hist";
+  $("infoPaneInfo").hidden = which !== "info";
+  $("info").scrollTop = 0;
+}
+document.querySelectorAll(".infoTabs button").forEach((b) => { b.onclick = () => showInfoTab(b.dataset.it); });
+$("infoBtn").onclick = () => { renderInfo(); showInfoTab("hist"); $("info").hidden = false; };
 $("infoClose").onclick = () => { $("info").hidden = true; };
 // ---------- Actualizar la app ----------
 // iOS no recarga las web apps al volver a abrirlas: borramos la caché y recargamos a mano.
