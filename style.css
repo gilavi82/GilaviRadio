@@ -241,3 +241,9 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 .rankLogo { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; background: #fff; flex: none; align-self: center; margin-right: -4px; }
 /* Icono de la cabecera = icono de la app (con la franja FTW) */
 .top h1 .appLogo { flex: none; width: 38px; height: 38px; border-radius: 9px; }
+/* Misma cabecera (icono + GilaviRadio + versión) en Temporizador e Info */
+.sheetHead { gap: 8px; }
+.sheetHead h1.appTitle { margin: 0; min-width: 0; font-size: 26px; display: flex; align-items: center; gap: 7px; }
+.sheetHead h1.appTitle .appLogo { flex: none; width: 38px; height: 38px; border-radius: 9px; }
+.sheetHead .chip { flex: none; }
+.sheetTitle { margin: 18px 0 4px; font-size: 22px; }
