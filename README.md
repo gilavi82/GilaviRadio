@@ -23,3 +23,4 @@ Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base
 - Buscar con varios países y varios géneros; al elegir unos, la lista de los otros se ajusta.
 - Botón Aleatoria dentro de Buscar: emisora al azar con esos filtros, con botón Siguiente.
 - Pantalla de información con historial: horas de escucha, emisoras y países.
+- En 11 idiomas (español, inglés, francés, portugués, alemán, chino, hindi, árabe, bengalí, ruso y japonés): usa el del iPhone, o se elige en Info. Si el del iPhone no está, sale en español.

@@ -31,7 +31,7 @@ button, input, select { font: inherit; color: inherit; }
 .stickyTop { position: sticky; top: 0; background: var(--bg); z-index: 5; }
 .tabs { display: flex; gap: 6px; padding: 8px 16px 4px; }
 .sortBar { display: flex; align-items: center; gap: 6px; padding: 2px 16px 8px; font-size: 13px; color: var(--muted); }
-.sortBar span { margin-right: 2px; }
+.sortBar span { margin-inline-end: 2px; }
 .sortBar button { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; color: var(--muted); }
 .sortBar button.on { background: var(--card); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .tabs button { flex: 1; min-width: 0; background: var(--card); border: 0; border-radius: 10px; padding: 10px 0; color: var(--muted); font-size: 15px; }
@@ -47,9 +47,9 @@ button, input, select { font: inherit; color: inherit; }
 }
 .filters input { flex-basis: 100%; }
 .qWrap { position: relative; flex-basis: 100%; display: flex; }
-.qWrap input { flex: 1; padding-right: 44px; }
+.qWrap input { flex: 1; padding-inline-end: 44px; }
 .qWrap input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
-.qClear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--line); color: var(--text); font-size: 15px; }
+.qClear { position: absolute; inset-inline-end: 4px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--line); color: var(--text); font-size: 15px; }
 .primary { flex-basis: 100%; background: var(--accent); color: #111; border: 0; border-radius: 10px; padding: 11px; font-weight: 600; }
 
 .list { list-style: none; margin: 0; padding: 0; }
@@ -82,7 +82,7 @@ button, input, select { font: inherit; color: inherit; }
 .pInfo { flex: 1; min-width: 0; }
 .player .icon { padding: 4px 6px; }
 .pName { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.voteIcon { display: inline-block; vertical-align: -0.12em; margin-right: 3px; font-size: 0.95em; }
+.voteIcon { display: inline-block; vertical-align: -0.12em; margin-inline-end: 3px; font-size: 0.95em; }
 .voteIcon svg { display: block; }
 .voteBtn { font-size: 21px; display: flex; align-items: center; }
 .voteBtn svg { display: block; }
@@ -113,7 +113,7 @@ button, input, select { font: inherit; color: inherit; }
 .statLbl { font-size: 12px; color: var(--muted); }
 .small { color: var(--muted); font-size: 14px; }
 .small a { color: var(--accent); }
-.ftw { border-left: 4px solid #1d4ed8; background: rgba(29, 78, 216, .1); border-radius: 10px; padding: 10px 12px; margin: 8px 0 12px; }
+.ftw { border-inline-start: 4px solid #1d4ed8; background: rgba(29, 78, 216, .1); border-radius: 10px; padding: 10px 12px; margin: 8px 0 12px; }
 .ftw b { color: #3b6cf0; }
 .ftw p { margin: 4px 0 0; font-size: 14px; }
 .rank { list-style: none; margin: 0; padding: 0; }
@@ -126,7 +126,7 @@ button, input, select { font: inherit; color: inherit; }
 .rLogo { width: 96px; height: 96px; border-radius: 20px; object-fit: contain; background: #fff; }
 .rName { font-size: 22px; font-weight: 700; margin-top: 14px; overflow-wrap: anywhere; }
 .rMeta { color: var(--muted); font-size: 14px; margin-top: 6px; white-space: pre-line; }
-.rFav { position: absolute; top: 8px; right: 8px; font-size: 26px; }
+.rFav { position: absolute; top: 8px; inset-inline-end: 8px; font-size: 26px; }
 .rBtn { display: block; width: 100%; margin-top: 12px; font-size: 18px; padding: 14px; }
 .primary.half { flex: 1 1 40%; }
 .primary.full { flex: 1 1 100%; }
@@ -157,10 +157,10 @@ body.mapOpen .player { z-index: 40; }
 .refreshBtn { display: block; width: 100%; margin-top: 16px; padding: 13px; }
 .updateBar { position: fixed; left: 8px; right: 8px; top: calc(env(safe-area-inset-top) + 8px); z-index: 25; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--accent); border-radius: 12px; padding: 8px 8px 8px 14px; }
 .updateBar .primary { flex: none; flex-basis: auto; padding: 8px 14px; }
-.pickBtn { flex: 1 1 45%; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pickBtn { flex: 1 1 45%; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; text-align: start; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pickWrap { position: relative; flex: 1 1 45%; min-width: 0; display: flex; }
 .pickWrap .pickBtn { flex: 1; }
-.pickWrap .pickBtn.on { padding-right: 42px; }
+.pickWrap .pickBtn.on { padding-inline-end: 42px; }
 .pickBtn.on { border-color: var(--accent); color: var(--accent); }
 .pickFilter { width: 100%; margin-top: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
 .pickList { list-style: none; margin: 0; padding: 0; }
@@ -201,7 +201,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display
 #tab-search.folded #searchForm { display: none; }
 
 .mapSearch { position: relative; margin-top: 10px; display: flex; }
-.mapSearch input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 44px 10px 12px; color: var(--text); -webkit-appearance: none; appearance: none; font-size: 16px; }
+.mapSearch input { flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding-block: 10px; padding-inline: 12px 44px; color: var(--text); -webkit-appearance: none; appearance: none; font-size: 16px; }
 .mapSearch input::-webkit-search-cancel-button { display: none; }
 .mapResults { position: absolute; z-index: 1001; top: 100%; left: 0; right: 0; margin: 4px 0 0; padding: 0; list-style: none; background: var(--card); border: 1px solid var(--line); border-radius: 10px; max-height: 50vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
 .mapResults li { padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 15px; }
@@ -223,10 +223,10 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 #stPaneInfo, #stPaneRel { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -16px; padding: 0 16px calc(env(safe-area-inset-bottom) + 24px); }
 
 .btnPair { display: inline-flex; gap: 6px; flex: none; white-space: nowrap; }
-.toTop { position: absolute; right: 16px; bottom: 12px; z-index: 6; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--accent); font-size: 22px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 0; }
+.toTop { position: absolute; inset-inline-end: 16px; bottom: 12px; z-index: 6; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--accent); font-size: 22px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 0; }
 .toTop[hidden] { display: none; }
 .toTop.aboveBar { bottom: 58px; }
-.hdrVer { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: -4px; align-self: flex-end; margin-bottom: 5px; }
+.hdrVer { font-size: 11px; font-weight: 500; color: var(--muted); margin-inline-start: -4px; align-self: flex-end; margin-bottom: 5px; }
 #sleepBtn { white-space: nowrap; }
 .top h1 { min-width: 0; font-size: 26px; gap: 7px; }
 .top { gap: 8px; }
@@ -238,7 +238,7 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 .rank li.playable { cursor: pointer; }
 .rank li.playable span:first-child { color: var(--text, inherit); }
 .rank li.playable:active { background: var(--card); }
-.rankLogo { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; background: #fff; flex: none; align-self: center; margin-right: -4px; }
+.rankLogo { width: 26px; height: 26px; border-radius: 6px; object-fit: contain; background: #fff; flex: none; align-self: center; margin-inline-end: -4px; }
 /* Icono de la cabecera = icono de la app (con la franja FTW) */
 .top h1 .appLogo { flex: none; width: 38px; height: 38px; border-radius: 9px; }
 /* Misma cabecera (icono + GilaviRadio + versión) en Temporizador e Info */
@@ -247,3 +247,9 @@ body:has(#player[hidden]) .mapList { bottom: max(10px, env(safe-area-inset-botto
 .sheetHead h1.appTitle .appLogo { flex: none; width: 38px; height: 38px; border-radius: 9px; }
 .sheetHead .chip { flex: none; }
 .sheetTitle { margin: 18px 0 4px; font-size: 22px; }
+/* Idioma de la app (Info) */
+.langPick { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0 8px; font-size: 15px; }
+.langPick select { flex: 0 1 60%; min-width: 0; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 16px; }
+/* Árabe (de derecha a izquierda): el mapa y los números de versión siguen de izquierda a derecha */
+#map, .leaflet-container { direction: ltr; }
+[dir="rtl"] .hdrVer, [dir="rtl"] #appVersion { direction: ltr; unicode-bidi: isolate; }
