@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.15">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.16">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=1.0.15">
+  <link rel="stylesheet" href="style.css?v=1.0.16">
   <script>
     // En la app de pantalla de inicio del iPhone, el alto que da el navegador a veces no incluye
     // la zona de la hora (unos 47 px) y la app se queda corta por abajo. Usamos el alto real de la pantalla.
@@ -35,88 +35,88 @@
 </head>
 <body>
   <header class="top">
-    <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.15" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
+    <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.16" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
     <div class="topBtns">
-      <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
-      <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
+      <button id="sleepBtn" class="chip" title="Temporizador" data-i18n-title>⏾ <span id="sleepLabel" data-i18n>Apagar</span></button>
+      <button id="infoBtn" class="chip round" aria-label="Información e historial" data-i18n-aria>i</button>
     </div>
   </header>
 
   <div class="stickyTop">
   <nav class="tabs">
-    <button data-tab="favs">Favoritas</button>
-    <button data-tab="recent">Recientes</button>
-    <button data-tab="home" class="active">Populares</button>
-    <button data-tab="search">Buscar</button>
+    <button data-tab="favs" data-i18n>Favoritas</button>
+    <button data-tab="recent" data-i18n>Recientes</button>
+    <button data-tab="home" class="active" data-i18n>Populares</button>
+    <button data-tab="search" data-i18n>Buscar</button>
   </nav>
   <div id="sortBar" class="sortBar">
-    <span>Ordenar por</span>
-    <button data-sort="votes">Votos</button>
-    <button data-sort="clickcount">Escuchas</button>
+    <span data-i18n>Ordenar por</span>
+    <button data-sort="votes" data-i18n>Votos</button>
+    <button data-sort="clickcount" data-i18n>Escuchas</button>
   </div>
   </div>
 
   <main>
     <section id="tab-home" class="tab active">
       <div class="filters">
-        <select id="homeCountry" aria-label="País"></select>
+        <select id="homeCountry" aria-label="País" data-i18n-aria></select>
       </div>
       <div class="scroll">
       <ul id="homeList" class="list"></ul>
-      <button id="homeMore" class="more" hidden>Cargar más</button>
+      <button id="homeMore" class="more" hidden data-i18n>Cargar más</button>
       </div>
     </section>
 
     <section id="tab-search" class="tab">
-      <button type="button" id="searchShow" class="searchShow" hidden><span>🔎</span><span id="searchSummary" class="sum"></span><span class="chg">Cambiar ▾</span></button>
+      <button type="button" id="searchShow" class="searchShow" hidden><span>🔎</span><span id="searchSummary" class="sum"></span><span class="chg" data-i18n>Cambiar ▾</span></button>
       <form id="searchForm" class="filters">
-        <div class="qWrap"><input id="qName" type="search" placeholder="Nombre de la emisora" autocomplete="off"><button type="button" id="qClear" class="qClear" aria-label="Borrar" hidden>✕</button></div>
-        <div class="pickWrap"><button type="button" id="qCountryBtn" class="pickBtn">Cualquier país</button><button type="button" id="qCountryClear" class="qClear" aria-label="Quitar países" hidden>✕</button></div>
-        <div class="pickWrap"><button type="button" id="qTagBtn" class="pickBtn">Cualquier género</button><button type="button" id="qTagClear" class="qClear" aria-label="Quitar géneros" hidden>✕</button></div>
-        <button type="submit" class="primary full">Buscar</button>
-        <button type="button" id="rGo" class="primary third alt">🎲 Aleatoria</button>
-        <button type="button" id="nearGo" class="primary third alt">📍 Cerca de mí</button>
-        <button type="button" id="mapGo" class="primary third alt">🗺️ Mapa</button>
+        <div class="qWrap"><input id="qName" type="search" placeholder="Nombre de la emisora" data-i18n-ph autocomplete="off"><button type="button" id="qClear" class="qClear" aria-label="Borrar" data-i18n-aria hidden>✕</button></div>
+        <div class="pickWrap"><button type="button" id="qCountryBtn" class="pickBtn" data-i18n>Cualquier país</button><button type="button" id="qCountryClear" class="qClear" aria-label="Quitar países" data-i18n-aria hidden>✕</button></div>
+        <div class="pickWrap"><button type="button" id="qTagBtn" class="pickBtn" data-i18n>Cualquier género</button><button type="button" id="qTagClear" class="qClear" aria-label="Quitar géneros" data-i18n-aria hidden>✕</button></div>
+        <button type="submit" class="primary full" data-i18n>Buscar</button>
+        <button type="button" id="rGo" class="primary third alt" data-i18n>🎲 Aleatoria</button>
+        <button type="button" id="nearGo" class="primary third alt" data-i18n>📍 Cerca de mí</button>
+        <button type="button" id="mapGo" class="primary third alt" data-i18n>🗺️ Mapa</button>
       </form>
       <div class="scroll">
       <div id="rCard" class="rCard" hidden>
         <img id="rLogo" class="rLogo" alt="" src="icons/icon-192.png">
         <div id="rName" class="rName"></div>
         <div id="rMeta" class="rMeta"></div>
-        <button id="rFav" class="icon rFav" aria-label="Favorita">☆</button>
-        <button id="rNext" class="more rBtn">Siguiente ⏭</button>
+        <button id="rFav" class="icon rFav" aria-label="Favorita" data-i18n-aria>☆</button>
+        <button id="rNext" class="more rBtn" data-i18n>Siguiente ⏭</button>
       </div>
       <ul id="searchList" class="list"></ul>
-      <button id="searchMore" class="more" hidden>Cargar más</button>
+      <button id="searchMore" class="more" hidden data-i18n>Cargar más</button>
       </div>
     </section>
 
     <section id="tab-recent" class="tab">
       <div class="scroll">
-      <p id="recentEmpty" class="empty">Aquí aparecerán las últimas 10 emisoras que escuches.</p>
+      <p id="recentEmpty" class="empty" data-i18n>Aquí aparecerán las últimas 10 emisoras que escuches.</p>
       <ul id="recentList" class="list"></ul>
       </div>
       <div id="recentBar" class="favBar" hidden>
-        <button id="recentClear" class="chip">🗑 Borrar recientes</button>
+        <button id="recentClear" class="chip" data-i18n>🗑 Borrar recientes</button>
       </div>
     </section>
 
     <section id="tab-favs" class="tab">
-      <p id="favHelp" class="small" hidden>Mantén el dedo en ≡ y arrastra cada emisora a su sitio (o usa A–Z / Más escuchadas). Después pulsa Guardar.</p>
+      <p id="favHelp" class="small" hidden data-i18n>Mantén el dedo en ≡ y arrastra cada emisora a su sitio (o usa A–Z / Más escuchadas). Después pulsa Guardar.</p>
       <div class="scroll">
-      <p id="favsEmpty" class="empty">Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
+      <p id="favsEmpty" class="empty" data-i18n>Aún no tienes favoritas. Pulsa ☆ en cualquier emisora para guardarla aquí.</p>
       <ul id="favsList" class="list"></ul>
       </div>
       <div id="favBar" class="favBar" hidden>
-        <button id="favSortBtn" class="chip">↕ Editar orden</button>
+        <button id="favSortBtn" class="chip" data-i18n>↕ Editar orden</button>
         <span id="favSortTools" hidden>
           <button id="favAZ" class="chip">A–Z</button>
-          <button id="favMost" class="chip">Más escuchadas</button>
-          <span class="btnPair"><button id="favDone" class="chip on">Guardar</button><button id="favCancel" class="chip">Cancelar</button></span>
+          <button id="favMost" class="chip" data-i18n>Más escuchadas</button>
+          <span class="btnPair"><button id="favDone" class="chip on" data-i18n>Guardar</button><button id="favCancel" class="chip" data-i18n>Cancelar</button></span>
         </span>
       </div>
     </section>
-    <button id="toTop" class="toTop" hidden aria-label="Volver arriba">↑</button>
+    <button id="toTop" class="toTop" hidden aria-label="Volver arriba" data-i18n-aria>↑</button>
   </main>
 
   <footer id="player" class="player" hidden>
@@ -126,110 +126,111 @@
       <div id="pStatus" class="pStatus"></div>
       <div id="pPop" class="pPop" hidden></div>
     </div>
-    <button id="pVote" class="icon voteBtn" aria-label="Votar esta emisora"></button>
-    <button id="pFav" class="icon" aria-label="Favorita">☆</button>
-    <button id="pToggle" class="icon big" aria-label="Reproducir">▶</button>
+    <button id="pVote" class="icon voteBtn" aria-label="Votar esta emisora" data-i18n-aria></button>
+    <button id="pFav" class="icon" aria-label="Favorita" data-i18n-aria>☆</button>
+    <button id="pToggle" class="icon big" aria-label="Reproducir" data-i18n-aria>▶</button>
   </footer>
 
   <div id="info" class="sheet" hidden>
     <div class="sheetHead">
-      <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.15" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
-      <button id="infoClose" class="chip">Cerrar</button>
+      <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.16" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
+      <button id="infoClose" class="chip" data-i18n>Cerrar</button>
     </div>
     <nav class="stTabs infoTabs">
-      <button data-it="hist" class="active">Historial de escuchas</button>
-      <button data-it="info">Info</button>
+      <button data-it="hist" class="active" data-i18n>Historial de escuchas</button>
+      <button data-it="info" data-i18n>Info</button>
     </nav>
 
     <div id="infoPaneHist">
-    <h3>Tu historial de escucha</h3>
+    <h3 data-i18n>Tu historial de escucha</h3>
     <div class="statGrid">
-      <div class="stat"><div id="statHours" class="statNum">0 h</div><div class="statLbl">de escucha</div></div>
-      <div class="stat"><div id="statStations" class="statNum">0</div><div class="statLbl">emisoras distintas</div></div>
-      <div class="stat"><div id="statCountries" class="statNum">0</div><div class="statLbl">países</div></div>
+      <div class="stat"><div id="statHours" class="statNum">0 h</div><div class="statLbl" data-i18n>de escucha</div></div>
+      <div class="stat"><div id="statStations" class="statNum">0</div><div class="statLbl" data-i18n>emisoras distintas</div></div>
+      <div class="stat"><div id="statCountries" class="statNum">0</div><div class="statLbl" data-i18n>países</div></div>
     </div>
     <p id="statSince" class="small"></p>
 
-    <h3>Emisoras más escuchadas</h3>
+    <h3 data-i18n>Emisoras más escuchadas</h3>
     <ul id="statTopStations" class="rank"></ul>
 
-    <h3>Países</h3>
+    <h3 data-i18n>Países</h3>
     <ul id="statTopCountries" class="rank"></ul>
-    <button id="statReset" class="more danger">Borrar historial</button>
+    <button id="statReset" class="more danger" data-i18n>Borrar historial</button>
     </div>
 
     <div id="infoPaneInfo" hidden>
-    <h3>Sobre la app</h3>
-    <div class="ftw"><b>Free to World (FTW)</b><p>GilaviRadio es una app totalmente gratuita y libre de anuncios, hecha para que cualquiera pueda usarla sin gasto alguno. Eso es lo que significa la franja azul «FTW» del icono.</p></div>
-    <p class="small">Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
-    <p class="small">Tus favoritas y tu historial se guardan solo en este iPhone. Si borras la app de la pantalla de inicio, se pierden.</p>
-    <p class="small">Versión <span id="appVersion"></span></p>
-    <button id="appRefresh" class="primary refreshBtn">↻ Actualizar la app</button>
+    <h3 data-i18n>Sobre la app</h3>
+    <div class="ftw"><b>Free to World (FTW)</b><p data-i18n>GilaviRadio es una app totalmente gratuita y libre de anuncios, hecha para que cualquiera pueda usarla sin gasto alguno. Eso es lo que significa la franja azul «FTW» del icono.</p></div>
+    <p class="small" data-i18n-html="Las emisoras vienen de {0}, una base de datos abierta mantenida por voluntarios.">Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
+    <p class="small" data-i18n>Tus favoritas y tu historial se guardan solo en este iPhone. Si borras la app de la pantalla de inicio, se pierden.</p>
+    <label class="langPick"><span data-i18n>Idioma de la app</span><select id="langSel"></select></label>
+    <p class="small"><span data-i18n>Versión</span> <span id="appVersion"></span></p>
+    <button id="appRefresh" class="primary refreshBtn" data-i18n>↻ Actualizar la app</button>
     </div>
   </div>
 
   <div id="picker" class="sheet" hidden>
     <div class="sheetHead">
-      <h2 id="pickTitle">Países</h2>
-      <button id="pickDone" class="chip on">Listo</button>
+      <h2 id="pickTitle" data-i18n>Países</h2>
+      <button id="pickDone" class="chip on" data-i18n>Listo</button>
     </div>
-    <input id="pickFilter" class="pickFilter" type="search" placeholder="Escribe para filtrar" autocomplete="off">
+    <input id="pickFilter" class="pickFilter" type="search" placeholder="Escribe para filtrar" data-i18n-ph autocomplete="off">
     <p id="pickHint" class="small"></p>
     <ul id="pickList" class="pickList"></ul>
-    <button id="pickClear" class="more">Quitar selección</button>
+    <button id="pickClear" class="more" data-i18n>Quitar selección</button>
   </div>
 
   <div id="stSheet" class="sheet" hidden>
     <div class="sheetHead">
-      <h2>Ficha de la emisora</h2>
-      <button id="stClose" class="chip">Cerrar</button>
+      <h2 data-i18n>Ficha de la emisora</h2>
+      <button id="stClose" class="chip" data-i18n>Cerrar</button>
     </div>
     <div class="stHead"><img id="stLogo" alt=""><div id="stName" class="n"></div></div>
     <nav class="stTabs">
-      <button data-st="rel" class="active">Relacionadas</button>
-      <button data-st="info">Info</button>
+      <button data-st="rel" class="active" data-i18n>Relacionadas</button>
+      <button data-st="info" data-i18n>Info</button>
     </nav>
     <div id="stPaneInfo" hidden>
     <div class="logoTools">
-      <a id="stGoogle" class="chip linkChip" href="https://www.google.com/" target="_blank" rel="noopener">🔎 Buscar logo en Google</a>
-      <button id="stPaste" class="chip">📋 Pegar logo</button>
-      <button id="stLogoReset" class="chip" hidden>Quitar mi logo</button>
+      <a id="stGoogle" class="chip linkChip" href="https://www.google.com/" target="_blank" rel="noopener" data-i18n>🔎 Buscar logo en Google</a>
+      <button id="stPaste" class="chip" data-i18n>📋 Pegar logo</button>
+      <button id="stLogoReset" class="chip" hidden data-i18n>Quitar mi logo</button>
     </div>
-    <p class="small">En Google, mantén el dedo sobre el logo que te guste y pulsa <b>Copiar</b>. Vuelve aquí y pulsa <b>Pegar logo</b>.</p>
+    <p class="small" data-i18n-html="En Google, mantén el dedo sobre el logo que te guste y pulsa {0}. Vuelve aquí y pulsa {1}."><b data-i18n>Copiar</b><b data-i18n>Pegar logo</b></p>
     <ul id="stInfo" class="kv"></ul>
-    <p class="small">Algunas emisoras no tienen todos los datos rellenos.</p>
+    <p class="small" data-i18n>Algunas emisoras no tienen todos los datos rellenos.</p>
     </div>
     <div id="stPaneRel">
       <div id="relSortBar" class="sortBar">
-        <span>Ordenar por</span>
-        <button data-sort="votes">Votos</button>
-        <button data-sort="clickcount">Escuchas</button>
+        <span data-i18n>Ordenar por</span>
+        <button data-sort="votes" data-i18n>Votos</button>
+        <button data-sort="clickcount" data-i18n>Escuchas</button>
       </div>
       <div id="relScroll">
-      <p class="small">Primero otras de la misma cadena y después del mismo género, empezando por las del mismo país.</p>
+      <p class="small" data-i18n>Primero otras de la misma cadena y después del mismo género, empezando por las del mismo país.</p>
       <ul id="stRelated" class="list"></ul>
       </div>
-      <button id="relTop" class="toTop" hidden aria-label="Volver arriba">↑</button>
+      <button id="relTop" class="toTop" hidden aria-label="Volver arriba" data-i18n-aria>↑</button>
     </div>
 
   </div>
 
   <div id="mapSheet" class="sheet mapSheet" hidden>
     <div class="sheetHead">
-      <h2>Mapa</h2>
+      <h2 data-i18n>Mapa</h2>
       <div class="topBtns">
-        <button id="mapLocate" class="chip">📍 Dónde estoy</button>
-        <button id="mapClose" class="chip">Cerrar</button>
+        <button id="mapLocate" class="chip" data-i18n>📍 Dónde estoy</button>
+        <button id="mapClose" class="chip" data-i18n>Cerrar</button>
       </div>
     </div>
     <form id="mapSearch" class="mapSearch">
-      <div class="qWrap"><input id="mapQ" type="search" placeholder="Buscar ciudad o lugar" autocomplete="off" enterkeyhint="search"><button type="button" id="mapQClear" class="qClear" aria-label="Borrar" hidden>✕</button></div>
+      <div class="qWrap"><input id="mapQ" type="search" placeholder="Buscar ciudad o lugar" data-i18n-ph autocomplete="off" enterkeyhint="search"><button type="button" id="mapQClear" class="qClear" aria-label="Borrar" data-i18n-aria hidden>✕</button></div>
       <ul id="mapResults" class="mapResults" hidden></ul>
     </form>
-    <p id="mapHint" class="small">Cargando mapa…</p>
+    <p id="mapHint" class="small" data-i18n>Cargando mapa…</p>
     <div id="map"></div>
     <div id="mapList" class="mapList" hidden>
-      <div class="mapListHead"><b id="mapListTitle"></b><button id="mapZoom" class="chip">🔍 Acercar</button><button id="mapListClose" class="chip">✕</button></div>
+      <div class="mapListHead"><b id="mapListTitle"></b><button id="mapZoom" class="chip" data-i18n>🔍 Acercar</button><button id="mapListClose" class="chip">✕</button></div>
       <ul id="mapListUl" class="list"></ul>
     </div>
   </div>
@@ -237,36 +238,37 @@
   <div id="sleepSheet" class="sheet" hidden>
     <div>
       <div class="sheetHead">
-        <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.15" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
-        <button id="sleepClose" class="chip">Cerrar</button>
+        <h1 class="appTitle"><img src="icons/icon-192.png?v=1.0.16" class="appLogo" alt="">GilaviRadio<small class="hdrVer">v1.0</small></h1>
+        <button id="sleepClose" class="chip" data-i18n>Cerrar</button>
       </div>
-      <h2 class="sheetTitle">Apagar la radio</h2>
+      <h2 class="sheetTitle" data-i18n>Apagar la radio</h2>
       <p id="sleepState" class="small"></p>
       <div class="sleepGrid">
         <button data-min="15">15 min</button>
         <button data-min="30">30 min</button>
         <button data-min="45">45 min</button>
-        <button data-min="60">1 hora</button>
-        <button data-min="90">1 h 30</button>
-        <button data-min="120">2 horas</button>
+        <button data-min="60" data-i18n>1 hora</button>
+        <button data-min="90" data-i18n>1 h 30</button>
+        <button data-min="120" data-i18n>2 horas</button>
       </div>
       <form id="sleepCustomForm" class="sleepCustom">
-        <input id="sleepCustom" type="number" inputmode="numeric" min="1" max="1440" placeholder="Minutos personalizados">
-        <button type="submit" class="primary">Activar</button>
+        <input id="sleepCustom" type="number" inputmode="numeric" min="1" max="1440" placeholder="Minutos personalizados" data-i18n-ph>
+        <button type="submit" class="primary" data-i18n>Activar</button>
       </form>
-      <button id="sleepOff" class="more danger" hidden>Desactivar temporizador</button>
+      <button id="sleepOff" class="more danger" hidden data-i18n>Desactivar temporizador</button>
     </div>
   </div>
 
   <div id="updateBar" class="updateBar" hidden>
-    <span>Hay una versión nueva</span>
-    <button id="updateNow" class="primary">Actualizar</button>
+    <span data-i18n>Hay una versión nueva</span>
+    <button id="updateNow" class="primary" data-i18n>Actualizar</button>
   </div>
 
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=1.0.15"></script>
-  <script src="app.js?v=1.0.15"></script>
+  <script src="i18n.js?v=1.0.16"></script>
+  <script src="tz.js?v=1.0.16"></script>
+  <script src="app.js?v=1.0.16"></script>
 </body>
 </html>

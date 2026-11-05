@@ -226,7 +226,7 @@ async function wdFindFreq(name, cc) {
     if (!pick) return "";
   }
   const f = pick.fr;
-  return f.slice(0, 4).join(" · ") + (f.length > 4 ? ` y ${f.length - 4} más` : "");
+  return f.slice(0, 4).join(" · ") + (f.length > 4 ? " " + t("y {0} más", f.length - 4) : "");
 }
 const wdFreqCache = (() => { try { return JSON.parse(localStorage.getItem("wdFreq") || "{}"); } catch { return {}; } })();
 async function stationFreq(st) {
@@ -267,21 +267,24 @@ function artworkUrl(st) {
   const list = logoCandidates(st);
   return list.length ? list[1] : new URL("icons/icon-512.png", location.href).href;
 }
-const REGION = (() => { try { return new Intl.DisplayNames(["es"], { type: "region" }); } catch { return null; } })();
+const REGION = (() => { try { return new Intl.DisplayNames([LOCALE, LANG], { type: "region" }); } catch { return null; } })();
 function countryName(st) {
   try { return (st.countrycode && REGION && REGION.of(st.countrycode)) || st.country; } catch { return st.country; }
 }
 function meta(st) {
   const tags = (st.tags || "").split(",").filter(Boolean).slice(0, 2).join(", ");
-  const dist = st.distKm != null ? "a " + (st.distKm < 1 ? "menos de 1" : Math.round(st.distKm)) + " km" : "";
+  const dist = st.distKm != null ? (st.distKm < 1 ? t("a menos de 1 km") : t("a {0} km", Math.round(st.distKm))) : "";
   return [dist, countryName(st), tags, st.bitrate ? st.bitrate + " kbps" : ""].filter(Boolean).join(" · ");
 }
 
+// Números en el formato del idioma (12 mil, 12K, 1,2 M…)
+const NF = new Intl.NumberFormat(LOCALE);
+const NF1 = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1 });
+const NFC = (() => { try { return new Intl.NumberFormat(LOCALE, { notation: "compact", maximumFractionDigits: 1 }); } catch { return null; } })();
 function fmtNum(n) {
   n = Number(n) || 0;
-  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(".0", "").replace(".", ",") + " M";
-  if (n >= 1e4) return Math.round(n / 1e3) + " mil";
-  return n.toLocaleString("es-ES");
+  if (n >= 1e4 && NFC) return NFC.format(n);
+  return NF.format(n);
 }
 // Indicadores de popularidad: votos y escuchas (la tendencia se quitó: era casi igual que las escuchas)
 // Mano (me gusta) monocroma: usa el color del texto
@@ -292,11 +295,11 @@ function fillPop(el, st) {
   if (st.votes == null && st.clickcount == null) return false;
   const hand = document.createElement("span");
   hand.className = "voteIcon";
-  hand.setAttribute("aria-label", "votos");
+  hand.setAttribute("aria-label", t("votos"));
   hand.innerHTML = THUMB_SVG;
   const ears = document.createElement("span");
   ears.className = "voteIcon";
-  ears.setAttribute("aria-label", "escuchas");
+  ears.setAttribute("aria-label", t("escuchas"));
   ears.innerHTML = HEADPHONES_SVG;
   el.append(hand, fmtNum(st.votes) + " · ", ears, fmtNum(st.clickcount));
   return true;
@@ -316,7 +319,7 @@ function stationItem(st, list) {
   if (!fillPop(main.children[2], st)) main.children[2].remove();
   const fav = document.createElement("button");
   fav.className = "icon favBtn";
-  fav.setAttribute("aria-label", "Favorita");
+  fav.setAttribute("aria-label", t("Favorita"));
   fav.onclick = (e) => { e.stopPropagation(); toggleFav(st); };
   li.append(img, main, fav);
   li.onclick = () => play(st, list);
@@ -346,7 +349,7 @@ function pagedList(ulId, moreId, loader = searchStations) {
   const ul = $(ulId), more = $(moreId);
   const state = { params: null, offset: 0, items: [] };
   async function load(reset) {
-    if (reset) { state.offset = 0; state.items = []; ul.innerHTML = `<li class="msg">Cargando…</li>`; }
+    if (reset) { state.offset = 0; state.items = []; ul.innerHTML = `<li class="msg">${t("Cargando…")}</li>`; }
     more.hidden = true;
     try {
       const { items, full } = await loader(state.params, state.offset);
@@ -354,11 +357,11 @@ function pagedList(ulId, moreId, loader = searchStations) {
       state.offset += 60;
       state.items.push(...items);
       items.forEach((st) => ul.append(stationItem(st, state.items)));
-      if (!state.items.length) ul.innerHTML = `<li class="msg">No se encontraron emisoras.</li>`;
+      if (!state.items.length) ul.innerHTML = `<li class="msg">${t("No se encontraron emisoras.")}</li>`;
       more.hidden = !full;
       refreshListsState();
     } catch {
-      ul.innerHTML = `<li class="msg">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</li>`;
+      ul.innerHTML = `<li class="msg">${t("No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.")}</li>`;
     }
   }
   more.onclick = () => load(false);
@@ -384,12 +387,12 @@ function addRecent(st) {
 }
 function agoText(ms) {
   const m = Math.round((Date.now() - ms) / 60000);
-  if (m < 1) return "Ahora mismo";
-  if (m < 60) return "Hace " + m + " min";
+  if (m < 1) return t("Ahora mismo");
+  if (m < 60) return t("Hace {0} min", m);
   const h = Math.round(m / 60);
-  if (h < 24) return "Hace " + h + " h";
+  if (h < 24) return t("Hace {0} h", h);
   const d = Math.round(h / 24);
-  return d === 1 ? "Ayer" : "Hace " + d + " días";
+  return d === 1 ? t("Ayer") : t("Hace {0} días", d);
 }
 function renderRecent() {
   const ul = $("recentList");
@@ -404,7 +407,7 @@ function renderRecent() {
   $("recentBar").hidden = !recent.length;
   refreshListsState();
 }
-$("recentClear").onclick = () => { if (!confirm("¿Borrar todas las emisoras recientes?")) return; recent = []; store.set("recent", recent); renderRecent(); };
+$("recentClear").onclick = () => { if (!confirm(t("¿Borrar todas las emisoras recientes?"))) return; recent = []; store.set("recent", recent); renderRecent(); };
 document.querySelector('.tabs button[data-tab="recent"]').addEventListener("click", renderRecent);
 setTimeout(renderRecent, 0); // cuando ya esté listo el reproductor
 
@@ -458,8 +461,8 @@ function pickLabel(list, empty, fmt) {
   return list.length === 1 ? fmt(list[0]) : `${fmt(list[0])} +${list.length - 1}`;
 }
 function updatePickButtons() {
-  $("qCountryBtn").textContent = pickLabel(selCountries, "Cualquier país", countryLabel);
-  $("qTagBtn").textContent = pickLabel(selTags, "Cualquier género", (t) => t);
+  $("qCountryBtn").textContent = pickLabel(selCountries, t("Cualquier país"), countryLabel);
+  $("qTagBtn").textContent = pickLabel(selTags, t("Cualquier género"), (g) => g);
   $("qCountryBtn").classList.toggle("on", selCountries.length > 0);
   $("qTagBtn").classList.toggle("on", selTags.length > 0);
   $("qCountryClear").hidden = !selCountries.length;
@@ -472,31 +475,31 @@ let pickKind = "country", pickSel = new Set(), pickOptions = [];
 async function openPicker(kind) {
   pickKind = kind;
   pickSel = new Set(kind === "country" ? selCountries : selTags);
-  $("pickTitle").textContent = kind === "country" ? "Países" : "Géneros";
+  $("pickTitle").textContent = kind === "country" ? t("Países") : t("Géneros");
   $("pickFilter").value = "";
   $("picker").hidden = false;
   const other = kind === "country" ? selTags : selCountries;
   pickOptions = [];
   if (other.length) {
-    $("pickHint").textContent = "Cargando…";
+    $("pickHint").textContent = t("Cargando…");
     $("pickList").innerHTML = "";
     try {
       if (kind === "country") {
         const counts = await countryFacet(other);
         pickOptions = [...counts].map(([code, n]) => ({ id: code, name: countryLabel(code), count: n }))
-          .sort((a, b) => a.name.localeCompare(b.name, "es"));
+          .sort((a, b) => a.name.localeCompare(b.name, LOCALE));
       } else {
         const counts = await tagFacet(other);
         pickOptions = [...counts].map(([t, n]) => ({ id: t, name: t, count: n })).sort((a, b) => b.count - a.count);
       }
       $("pickHint").textContent = kind === "country"
-        ? `Solo países con emisoras de: ${other.join(", ")}.`
-        : `Solo géneros que hay en: ${other.map(countryLabel).join(", ")} (los más comunes primero).`;
+        ? t("Solo países con emisoras de: {0}.", other.join(", "))
+        : t("Solo géneros que hay en: {0} (los más comunes primero).", other.map(countryLabel).join(", "));
     } catch {
-      $("pickHint").textContent = "No se pudo cargar la lista ajustada; se muestran todos.";
+      $("pickHint").textContent = t("No se pudo cargar la lista ajustada; se muestran todos.");
     }
   } else {
-    $("pickHint").textContent = kind === "country" ? "Puedes marcar varios países." : "Puedes marcar varios géneros.";
+    $("pickHint").textContent = kind === "country" ? t("Puedes marcar varios países.") : t("Puedes marcar varios géneros.");
   }
   if (!pickOptions.length) {
     pickOptions = kind === "country"
@@ -530,7 +533,7 @@ function renderPicker() {
     };
     ul.append(li);
   }
-  if (!opts.length) ul.innerHTML = `<li class="msg">Nada coincide.</li>`;
+  if (!opts.length) ul.innerHTML = `<li class="msg">${t("Nada coincide.")}</li>`;
 }
 $("pickFilter").addEventListener("input", renderPicker);
 $("pickClear").onclick = () => { pickSel.clear(); renderPicker(); };
@@ -633,7 +636,8 @@ paintSortBar();
 async function loadFilters() {
   const homeSel = $("homeCountry");
   const homeCode = store.get("homeCountry", "ES");
-  homeSel.innerHTML = `<option value="">🌍 Todo el mundo</option>`;
+  homeSel.innerHTML = "";
+  homeSel.add(new Option(t("🌍 Todo el mundo"), ""));
   try {
     const [countries, tags] = await Promise.all([
       api("countries", {}),
@@ -642,14 +646,14 @@ async function loadFilters() {
     const list = countries
       .filter((c) => c.iso_3166_1 && c.stationcount > 0)
       .map((c) => { let n = c.name; try { n = (REGION && REGION.of(c.iso_3166_1)) || n; } catch {} return { code: c.iso_3166_1, name: n, count: c.stationcount }; })
-      .sort((a, b) => a.name.localeCompare(b.name, "es"));
+      .sort((a, b) => a.name.localeCompare(b.name, LOCALE));
     for (const c of list) homeSel.add(new Option(`${c.name} (${c.count})`, c.code));
     allCountries = list;
     allTags = tags.filter((t) => t.name).map((t) => ({ name: t.name, count: t.stationcount }))
-      .sort((a, b) => a.name.localeCompare(b.name, "es"));
+      .sort((a, b) => a.name.localeCompare(b.name, LOCALE));
     updatePickButtons();
   } catch {
-    homeSel.add(new Option("España", "ES"));
+    homeSel.add(new Option(countryLabel("ES"), "ES"));
   }
   homeSel.value = homeCode;
   if (homeSel.value !== homeCode) homeSel.value = "";
@@ -664,18 +668,18 @@ $("nearGo").onclick = async () => {
   document.activeElement.blur();
   $("rCard").hidden = true;
   const ul = $("searchList");
-  ul.innerHTML = `<li class="msg">Buscando tu ubicación…</li>`;
+  ul.innerHTML = `<li class="msg">${t("Buscando tu ubicación…")}</li>`;
   $("searchMore").hidden = true;
   let near;
   try { near = await getPosition(); } catch (e) {
     ul.innerHTML = `<li class="msg">${e && e.code === 1
-      ? "No tengo permiso para ver tu ubicación. Actívalo en Ajustes → Privacidad y seguridad → Localización → Sitios web de Safari."
-      : "No se pudo saber tu ubicación. Inténtalo de nuevo."}</li>`;
+      ? t("No tengo permiso para ver tu ubicación. Actívalo en Ajustes → Privacidad y seguridad → Localización → Sitios web de Safari.")
+      : t("No se pudo saber tu ubicación. Inténtalo de nuevo.")}</li>`;
     return;
   }
   await results.search({ near });
-  if (!ul.querySelector(".st")) ul.innerHTML = `<li class="msg">No hay emisoras con ubicación conocida a menos de ${NEAR_KM} km de ti.</li>`;
-  else toast("Emisoras a menos de " + NEAR_KM + " km, de la más cercana a la más lejana");
+  if (!ul.querySelector(".st")) ul.innerHTML = `<li class="msg">${t("No hay emisoras con ubicación conocida a menos de {0} km de ti.", NEAR_KM)}</li>`;
+  else toast(t("Emisoras a menos de {0} km, de la más cercana a la más lejana", NEAR_KM));
 };
 $("searchForm").onsubmit = (e) => {
   lastSearchKind = "search";
@@ -755,7 +759,7 @@ function renderFavs() {
       w.className = "stDown";
       const since = st.lastcheckoktime ? new Date(st.lastcheckoktime.endsWith("Z") ? st.lastcheckoktime : st.lastcheckoktime.replace(" ", "T") + "Z") : null;
       const days = since && !isNaN(since) ? Math.floor((Date.now() - since) / 86400000) : null;
-      w.textContent = "⚠️ Parece caída" + (days == null ? "" : days < 1 ? "\nFuncionaba hoy" : days === 1 ? "\nFuncionaba ayer" : `\nNo funciona desde hace ${days} días`);
+      w.textContent = t("⚠️ Parece caída") + (days == null ? "" : "\n" + (days < 1 ? t("Funcionaba hoy") : days === 1 ? t("Funcionaba ayer") : t("No funciona desde hace {0} días", days)));
       const main = li.querySelector(".stMain");
       if (main) main.append(w);
       li.classList.add("down");
@@ -766,7 +770,7 @@ function renderFavs() {
       li.querySelector(".favBtn").remove();
       const h = document.createElement("div");
       h.className = "dragHandle";
-      h.setAttribute("aria-label", "Arrastrar para mover");
+      h.setAttribute("aria-label", t("Arrastrar para mover"));
       h.textContent = "≡";
       h.addEventListener("pointerdown", (e) => startFavDrag(e, li));
       li.append(h);
@@ -783,9 +787,9 @@ function renderFavs() {
   refreshListsState();
 }
 $("favSortBtn").onclick = () => { favSnapshot = favs.slice(); favSorting = true; renderFavs(); };
-$("favDone").onclick = () => { favSorting = false; favSnapshot = null; store.set("favs", favs); renderFavs(); toast("Orden guardado"); };
+$("favDone").onclick = () => { favSorting = false; favSnapshot = null; store.set("favs", favs); renderFavs(); toast(t("Orden guardado")); };
 $("favCancel").onclick = () => { if (favSnapshot) favs = favSnapshot; favSnapshot = null; favSorting = false; renderFavs(); };
-$("favAZ").onclick = () => { favs.sort((a, b) => a.name.localeCompare(b.name, "es")); saveFavOrder(); };
+$("favAZ").onclick = () => { favs.sort((a, b) => a.name.localeCompare(b.name, LOCALE)); saveFavOrder(); };
 $("favMost").onclick = () => {
   const secs = (s) => (stats.stations[s.stationuuid] || {}).sec || 0;
   favs.sort((a, b) => secs(b) - secs(a));
@@ -832,10 +836,10 @@ function start() {
   if (!current) return;
   wantPlaying = true;
   clearTimeout(retryTimer);
-  setStatus("Conectando…");
+  setStatus(t("Conectando…"));
   audio.src = current.url_resolved;
   audio.play().catch((e) => {
-    if (e && e.name === "NotAllowedError") { wantPlaying = false; setStatus("Pulsa ▶ para escuchar"); setToggle(false); }
+    if (e && e.name === "NotAllowedError") { wantPlaying = false; setStatus(t("Pulsa ▶ para escuchar")); setToggle(false); }
   });
   setToggle(true);
 }
@@ -847,7 +851,7 @@ function stop() {
   // Al ser radio en directo, soltamos la conexión para que al volver suene "en vivo"
   audio.removeAttribute("src"); audio.load();
   setToggle(false);
-  setStatus("En pausa");
+  setStatus(t("En pausa"));
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
 }
 
@@ -856,19 +860,19 @@ function retry(reason) {
   clearTimeout(retryTimer);
   // Si nunca llegó a sonar, no insistimos mucho: avisamos de que no funciona
   if (!everPlayed && retries >= 2) {
-    const why = current.badCodec ? "Esta emisora no funciona: su formato de audio no es compatible con el iPhone"
-      : current.httpOnly ? "Esta emisora no funciona en la web app (no tiene conexión segura)"
-      : "Esta emisora no funciona ahora mismo";
+    const why = current.badCodec ? t("Esta emisora no funciona: su formato de audio no es compatible con el iPhone")
+      : current.httpOnly ? t("Esta emisora no funciona en la web app (no tiene conexión segura)")
+      : t("Esta emisora no funciona ahora mismo");
     stop(); setStatus(why);
     // En modo aleatorio saltamos solos a otra emisora
-    if (randomMode) { toast("No funcionaba, buscando otra…"); setTimeout(() => { if (randomMode && !wantPlaying) nextRandom(); }, 1200); }
+    if (randomMode) { toast(t("No funcionaba, buscando otra…")); setTimeout(() => { if (randomMode && !wantPlaying) nextRandom(); }, 1200); }
     else toast(why);
     return;
   }
-  if (retries >= 8) { stop(); setStatus("No se puede conectar con esta emisora"); return; }
+  if (retries >= 8) { stop(); setStatus(t("No se puede conectar con esta emisora")); return; }
   const delay = Math.min(1000 * 2 ** retries, 15000);
   retries++;
-  setStatus(`${reason}. Reintentando…`);
+  setStatus(t("{0}. Reintentando…", t(reason)));
   retryTimer = setTimeout(start, delay);
 }
 
@@ -894,7 +898,7 @@ audio.addEventListener("playing", () => {
 });
 audio.addEventListener("waiting", () => {
   if (!wantPlaying) return;
-  setStatus("Cargando…");
+  setStatus(t("Cargando…"));
   armStall("Conexión lenta", 12000);
 });
 // Safari lanza "stalled" a menudo en directo aunque el audio siga sonando con lo que tiene guardado.
@@ -909,7 +913,7 @@ audio.addEventListener("ended", () => retry("La emisión se cortó"));
 audio.addEventListener("pause", () => {
   // Pausa externa (otra app de audio, llamada…): reflejarlo en la interfaz
   if (wantPlaying && !audio.ended && audio.readyState > 0 && !audio.error) {
-    wantPlaying = false; setToggle(false); setStatus("En pausa");
+    wantPlaying = false; setToggle(false); setStatus(t("En pausa"));
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
   }
 });
@@ -948,13 +952,13 @@ function stationLocalTime(st) {
   const z = st && stationTz(st);
   if (!z) return "";
   try {
-    const t = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: z.tz });
-    return `${t} en ${countryName(st)}${z.approx ? " (aprox.)" : ""}`;
+    const hm = new Date().toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit", timeZone: z.tz });
+    return t("{0} en {1}", hm, countryName(st)) + (z.approx ? " " + t("(aprox.)") : "");
   } catch { return ""; }
 }
 function liveStatus() {
-  const t = stationLocalTime(current);
-  return t || "En directo";
+  const lt = stationLocalTime(current);
+  return lt || t("En directo");
 }
 // Actualiza la hora cada 20 s mientras suena
 setInterval(() => {
@@ -965,7 +969,7 @@ setInterval(() => {
 function fmtDate(s) {
   if (!s) return "";
   const d = new Date(s.endsWith("Z") ? s : s.replace(" ", "T") + "Z");
-  return isNaN(d) ? s : d.toLocaleString("es-ES", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return isNaN(d) ? s : d.toLocaleString(LOCALE, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 let stShown = null;
 async function openStationInfo(st) {
@@ -979,10 +983,10 @@ async function openStationInfo(st) {
   $("stName").textContent = st.name;
   setLogo($("stLogo"), st);
   const ul = $("stInfo");
-  ul.innerHTML = `<li><span class="v">Cargando…</span></li>`;
+  ul.innerHTML = `<li><span class="v">${t("Cargando…")}</span></li>`;
   let d = st;
   try { const r = await api("stations/byuuid/" + st.stationuuid); if (r && r[0]) d = r[0]; } catch {}
-  const yes = (v) => (v === 1 || v === true || v === "1" ? "Sí" : v === 0 || v === false || v === "0" ? "No" : "");
+  const yes = (v) => (v === 1 || v === true || v === "1" ? t("Sí") : v === 0 || v === false || v === "0" ? t("No") : "");
   const z = stationTz(d);
   const freq = await Promise.race([stationFreq(d).catch(() => ""), new Promise((r) => setTimeout(() => r(""), 4000))]);
   if (stShown !== st) return;
@@ -998,22 +1002,22 @@ async function openStationInfo(st) {
     ["Calidad", d.bitrate ? d.bitrate + " kbps" : ""],
     ["Emisión HLS", yes(d.hls)],
     ["Dirección del directo", d.url_resolved || d.url ? { link: d.url_resolved || d.url } : ""],
-    ["Error de seguridad (SSL)", d.ssl_error ? "Sí" : d.ssl_error === 0 ? "No" : ""],
+    ["Error de seguridad (SSL)", d.ssl_error ? t("Sí") : d.ssl_error === 0 ? t("No") : ""],
     ["Funcionaba en la última comprobación", yes(d.lastcheckok)],
     ["Última comprobación", fmtDate(d.lastchecktime_iso8601 || d.lastchecktime)],
     ["Último funcionamiento correcto", fmtDate(d.lastcheckoktime_iso8601 || d.lastcheckoktime)],
     ["Último cambio de datos", fmtDate(d.lastchangetime_iso8601 || d.lastchangetime)],
-    ["Clics (popularidad)", d.clickcount != null ? String(d.clickcount) : ""],
-    ["Votos", d.votes != null ? String(d.votes) : ""],
+    ["Clics (popularidad)", d.clickcount != null ? NF.format(d.clickcount) : ""],
+    ["Votos", d.votes != null ? NF.format(d.votes) : ""],
     ["Zona horaria", z ? z.tz : ""],
-    ["Coordenadas", isFinite(parseFloat(d.geo_lat)) && isFinite(parseFloat(d.geo_long)) ? { link: `https://www.openstreetmap.org/?mlat=${d.geo_lat}&mlon=${d.geo_long}#map=8/${d.geo_lat}/${d.geo_long}`, text: `${(+d.geo_lat).toFixed(3)}, ${(+d.geo_long).toFixed(3)} (ver mapa)` } : ""],
+    ["Coordenadas", isFinite(parseFloat(d.geo_lat)) && isFinite(parseFloat(d.geo_long)) ? { link: `https://www.openstreetmap.org/?mlat=${d.geo_lat}&mlon=${d.geo_long}#map=8/${d.geo_lat}/${d.geo_long}`, text: `${(+d.geo_lat).toFixed(3)}, ${(+d.geo_long).toFixed(3)} ${t("(ver mapa)")}` } : ""],
     ["Identificador", d.stationuuid],
   ];
   ul.innerHTML = "";
   for (const [k, v] of rows) {
     if (!v) continue;
     const li = document.createElement("li");
-    const a = document.createElement("span"); a.className = "k"; a.textContent = k;
+    const a = document.createElement("span"); a.className = "k"; a.textContent = t(k);
     const b = document.createElement("span"); b.className = "v";
     if (typeof v === "object" && /^https?:\/\//i.test(v.link)) {
       const link = document.createElement("a");
@@ -1072,12 +1076,12 @@ async function relatedStations(st) {
 }
 async function showRelated(st) {
   const ul = $("stRelated");
-  ul.innerHTML = `<li class="msg">Buscando emisoras relacionadas…</li>`;
+  ul.innerHTML = `<li class="msg">${t("Buscando emisoras relacionadas…")}</li>`;
   let list = [];
   try { list = await relatedStations(st); } catch {}
   if (stShown !== st) return;
   ul.innerHTML = "";
-  if (!list.length) { ul.innerHTML = `<li class="msg">No he encontrado emisoras relacionadas.</li>`; return; }
+  if (!list.length) { ul.innerHTML = `<li class="msg">${t("No he encontrado emisoras relacionadas.")}</li>`; return; }
   relList = list;
   renderRelated();
 }
@@ -1104,7 +1108,7 @@ $("relTop").onclick = () => $("relScroll").scrollTo({ top: 0, behavior: "smooth"
 // ---------- Logo propio desde Google ----------
 // Enlace normal (no window.open): en la app de pantalla de inicio del iPhone window.open puede no hacer nada
 function googleLogoUrl(st) {
-  return "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent('logo cuadrado "' + st.name + '"');
+  return "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(t("logo cuadrado") + ' "' + st.name + '"');
 }
 function blobToLogo(blob) {
   return new Promise((res, rej) => {
@@ -1151,18 +1155,18 @@ $("stPaste").onclick = async () => {
       const txt = (await navigator.clipboard.readText()).trim();
       if (/^https?:\/\/\S+$/i.test(txt)) { saveMyLogo(st, txt.replace(/^http:/i, "https:")); toast("Logo guardado"); return; }
     }
-    toast("No hay ninguna imagen copiada. En Google, mantén el dedo sobre el logo y pulsa Copiar.");
+    toast(t("No hay ninguna imagen copiada. En Google, mantén el dedo sobre el logo y pulsa Copiar."));
   } catch {
-    toast("No se pudo leer lo copiado. Pulsa \"Pegar\" cuando el iPhone lo pregunte.");
+    toast(t("No se pudo leer lo copiado. Pulsa \"Pegar\" cuando el iPhone lo pregunte."));
   }
 };
-$("stLogoReset").onclick = () => { if (stShown) { saveMyLogo(stShown, null); toast("Vuelve el logo de antes"); } };
+$("stLogoReset").onclick = () => { if (stShown) { saveMyLogo(stShown, null); toast(t("Vuelve el logo de antes")); } };
 $("pLogo").addEventListener("click", () => openStationInfo(current));
 document.querySelector(".pInfo").addEventListener("click", () => openStationInfo(current));
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.15";
+const APP_VERSION = "1.0.16";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1172,7 +1176,7 @@ document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v
     if (tab.classList.contains("folded") === on) return;
     if (on) {
       const f = searchFilters();
-      $("searchSummary").textContent = lastSearchKind === "near" ? "Cerca de mí" : lastSearchKind === "random" ? "Aleatoria en " + filtersText(f) : filtersText(f);
+      $("searchSummary").textContent = lastSearchKind === "near" ? t("Cerca de mí") : lastSearchKind === "random" ? t("Aleatoria en {0}", filtersText(f)) : filtersText(f);
     }
     tab.classList.toggle("folded", on);
     $("searchShow").hidden = !on;
@@ -1210,7 +1214,7 @@ function addMapStations(list) {
     mapLayer.addLayer(m);
     added++;
   }
-  $("mapHint").textContent = `${mapMarkers.size} emisoras en el mapa. Solo salen las que tienen ubicación conocida. Mueve o acerca el mapa para cargar más.`;
+  $("mapHint").textContent = t("{0} emisoras en el mapa. Solo salen las que tienen ubicación conocida. Mueve o acerca el mapa para cargar más.", NF.format(mapMarkers.size));
   return added;
 }
 let mapTimer = null, mapWorldLoaded = false;
@@ -1229,12 +1233,12 @@ async function loadMapArea() {
         geo_lat: c.lat.toFixed(4), geo_long: c.lng.toFixed(4), geo_distance: String(Math.round(r * 1000)),
       }));
     }
-  } catch { $("mapHint").textContent = "No se pudieron cargar emisoras. Revisa tu conexión."; }
+  } catch { $("mapHint").textContent = t("No se pudieron cargar emisoras. Revisa tu conexión."); }
 }
 async function openMap() {
   $("mapSheet").hidden = false;
   document.body.classList.add("mapOpen");
-  try { await loadLeaflet(); } catch { $("mapHint").textContent = "No se pudo cargar el mapa."; return; }
+  try { await loadLeaflet(); } catch { $("mapHint").textContent = t("No se pudo cargar el mapa."); return; }
   if (!map) {
     const v = store.get("mapView", { lat: 40.2, lng: -3.7, z: 5 });
     map = L.map("map", { zoomControl: false, worldCopyJump: true }).setView([v.lat, v.lng], v.z);
@@ -1271,7 +1275,7 @@ async function mapPlaceSearch(q) {
   const ul = $("mapResults"), seq = ++mapQSeq;
   if (q.length < 2) { ul.hidden = true; return; }
   ul.hidden = false;
-  if (!ul.children.length) ul.innerHTML = "<li>Buscando…</li>";
+  if (!ul.children.length) ul.innerHTML = `<li>${t("Buscando…")}</li>`;
   try {
     const params = { q, limit: "7" };
     if (map) { const c = map.getCenter(); params.lat = c.lat.toFixed(2); params.lon = c.lng.toFixed(2); }
@@ -1280,7 +1284,7 @@ async function mapPlaceSearch(q) {
     if (seq !== mapQSeq) return; // ya se escribió otra cosa
     const feats = (data.features || []);
     ul.innerHTML = "";
-    if (!feats.length) { ul.innerHTML = "<li>No he encontrado ese lugar.</li>"; return; }
+    if (!feats.length) { ul.innerHTML = `<li>${t("No he encontrado ese lugar.")}</li>`; return; }
     for (const f of feats) {
       const p = f.properties || {}, [lon, lat] = (f.geometry && f.geometry.coordinates) || [];
       const li = document.createElement("li");
@@ -1295,7 +1299,7 @@ async function mapPlaceSearch(q) {
       };
       ul.append(li);
     }
-  } catch { if (seq === mapQSeq) ul.innerHTML = "<li>No se pudo buscar. Revisa tu conexión.</li>"; }
+  } catch { if (seq === mapQSeq) ul.innerHTML = `<li>${t("No se pudo buscar. Revisa tu conexión.")}</li>`; }
 }
 $("mapSearch").onsubmit = (e) => { e.preventDefault(); clearTimeout(mapQTimer); mapPlaceSearch($("mapQ").value.trim()); };
 $("mapQ").addEventListener("input", () => {
@@ -1310,7 +1314,7 @@ let mapListArea = null;
 function showMapList(list, center, bounds) {
   list = list.slice().sort((x, y) => (y.clickcount || 0) - (x.clickcount || 0));
   mapListArea = { center, bounds };
-  $("mapListTitle").textContent = list.length === 1 ? "1 emisora" : list.length + " emisoras aquí";
+  $("mapListTitle").textContent = list.length === 1 ? t("1 emisora") : t("{0} emisoras aquí", NF.format(list.length));
   $("mapZoom").hidden = map.getZoom() >= 14;
   const ul = $("mapListUl");
   ul.innerHTML = "";
@@ -1335,7 +1339,7 @@ $("mapGo").onclick = () => { document.activeElement.blur(); openMap(); };
 $("mapClose").onclick = () => { $("mapSheet").hidden = true; document.body.classList.remove("mapOpen"); };
 $("mapLocate").onclick = async () => {
   try { const p = await getPosition(); map && map.setView([p.lat, p.lon], 9); }
-  catch { toast("No se pudo saber tu ubicación."); }
+  catch { toast(t("No se pudo saber tu ubicación.")); }
 };
 // Botón ✕ para borrar el nombre en Buscar
 (() => {
@@ -1427,7 +1431,7 @@ window.addEventListener("pagehide", flushListen);
 
 function fmtTime(sec) {
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
-  return h ? `${h} h ${m} min` : `${m} min`;
+  return h ? t("{0} h {1} min", h, m) : t("{0} min", m);
 }
 function renderInfo() {
   flushListen();
@@ -1435,13 +1439,13 @@ function renderInfo() {
   const st = Object.entries(stats.stations).map(([id, e]) => ({ ...e, id })).filter((e) => e.sec >= 60).sort((a, b) => b.sec - a.sec);
   const co = Object.entries(stats.countries).filter(([, sec]) => sec >= 60).sort((a, b) => b[1] - a[1]);
   const hours = stats.totalSec / 3600;
-  $("statHours").textContent = hours >= 10 ? Math.round(hours) + " h" : (Math.round(hours * 10) / 10).toString().replace(".", ",") + " h";
+  $("statHours").textContent = t("{0} h", hours >= 10 ? NF.format(Math.round(hours)) : NF1.format(Math.round(hours * 10) / 10));
   $("statStations").textContent = st.length;
   $("statCountries").textContent = co.filter(([c]) => c !== "??").length;
-  $("statSince").textContent = "Desde el " + new Date(stats.since).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) + ". Total: " + fmtTime(stats.totalSec) + ".";
+  $("statSince").textContent = t("Desde el {0}. Total: {1}.", new Date(stats.since).toLocaleDateString(LOCALE, { day: "numeric", month: "long", year: "numeric" }), fmtTime(stats.totalSec));
   const row = (a, b) => { const li = document.createElement("li"); const x = document.createElement("span"), y = document.createElement("span"); x.textContent = a; y.textContent = b; li.append(x, y); return li; };
   const ts = $("statTopStations"); ts.innerHTML = "";
-  if (!st.length) ts.append(row("Aún no has escuchado ninguna emisora", ""));
+  if (!st.length) ts.append(row(t("Aún no has escuchado ninguna emisora"), ""));
   st.slice(0, 10).forEach((e) => {
     // Tocar una emisora del historial la pone a sonar
     const li = row(e.name, fmtTime(e.sec));
@@ -1455,9 +1459,9 @@ function renderInfo() {
     ts.append(li);
   });
   const tc = $("statTopCountries"); tc.innerHTML = "";
-  if (!co.length) tc.append(row("Aún no hay datos", ""));
+  if (!co.length) tc.append(row(t("Aún no hay datos"), ""));
   co.slice(0, 10).forEach(([c, sec]) => {
-    let n = c === "??" ? "Sin país" : c;
+    let n = c === "??" ? t("Sin país") : c;
     try { if (c !== "??" && REGION) n = REGION.of(c) || c; } catch {}
     tc.append(row(n, fmtTime(sec)));
   });
@@ -1466,10 +1470,10 @@ function renderInfo() {
 async function playFromHistory(id) {
   let st = [current, ...favs, ...recent].find((x) => x && x.stationuuid === id);
   if (!st) {
-    toast("Cargando emisora…");
+    toast(t("Cargando emisora…"));
     try { const r = await api("stations/byuuid/" + id); if (r && r[0] && playable(r[0])) st = slim(r[0]); } catch {}
   }
-  if (!st) { toast("No he podido cargar esa emisora"); return; }
+  if (!st) { toast(t("No he podido cargar esa emisora")); return; }
   $("info").hidden = true;
   play(st, [st]);
 }
@@ -1487,10 +1491,10 @@ $("infoClose").onclick = () => { $("info").hidden = true; };
 // Cada paso tiene un tiempo máximo, para que el botón nunca se quede "colgado".
 const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(r, ms))]);
 async function refreshApp() {
-  toast("Actualizando…");
+  toast(t("Actualizando…"));
   try {
     // 1) Descarga de nuevo los archivos saltándose la memoria del navegador
-    const files = ["./", "index.html", "style.css", "app.js", "tz.js", "sw.js", "version.json", "manifest.webmanifest"];
+    const files = ["./", "index.html", "style.css", "app.js", "i18n.js", "tz.js", "sw.js", "version.json", "manifest.webmanifest"];
     await withTimeout(Promise.all(files.map((f) => fetch(f, { cache: "reload" }).catch(() => {}))), 8000);
     // 2) Quita el service worker y su caché; se vuelven a instalar al recargar
     if ("serviceWorker" in navigator) {
@@ -1505,6 +1509,18 @@ async function refreshApp() {
   location.replace(location.pathname + "?v=" + Date.now());
 }
 $("appRefresh").onclick = refreshApp;
+// ---------- Idioma de la app (Info) ----------
+// "Automático" usa el idioma del iPhone (español si no está entre los disponibles).
+(() => {
+  const sel = $("langSel");
+  sel.add(new Option(t("Automático (idioma del iPhone)"), ""));
+  for (const l of LANGS) sel.add(new Option(LANG_NAMES[l], l));
+  sel.value = LANG_CHOICE;
+  sel.onchange = () => {
+    store.set("lang", sel.value);
+    location.replace(location.pathname); // se recarga en el nuevo idioma
+  };
+})();
 $("updateNow").onclick = refreshApp;
 // Al volver a la app, mira si hay una versión nueva publicada y ofrece actualizar
 async function checkUpdate() {
@@ -1518,7 +1534,7 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) chec
 checkUpdate();
 
 $("statReset").onclick = () => {
-  if (!confirm("¿Borrar todo el historial de escucha? Las favoritas no se borran.")) return;
+  if (!confirm(t("¿Borrar todo el historial de escucha? Las favoritas no se borran."))) return;
   stats = { since: Date.now(), totalSec: 0, stations: {}, countries: {} };
   if (listenStart) listenStart = Date.now();
   store.set("stats", stats);
@@ -1537,7 +1553,7 @@ function filtersText(f) {
   if (f.countries.length) parts.push(f.countries.map(countryLabel).join(", "));
   if (f.tags.length) parts.push(f.tags.join(", "));
   if (f.name) parts.push("«" + f.name + "»");
-  return parts.length ? parts.join(" · ") : "todo el mundo";
+  return parts.length ? parts.join(" · ") : t("todo el mundo");
 }
 function showRandomCard(st) {
   $("rCard").hidden = false;
@@ -1556,8 +1572,8 @@ async function nextRandom() {
   // Si cambian los filtros, empezamos una tanda nueva
   if (key !== randomKey) { randomPool = []; randomKey = key; }
   $("rCard").hidden = false;
-  $("rName").textContent = "Buscando…";
-  $("rMeta").textContent = "Aleatoria en " + filtersText(p);
+  $("rName").textContent = t("Buscando…");
+  $("rMeta").textContent = t("Aleatoria en {0}", filtersText(p));
   try {
     if (!randomPool.length) {
       // Todas las que cumplen los filtros, en orden aleatorio (sin repetir hasta agotarlas)
@@ -1567,15 +1583,15 @@ async function nextRandom() {
     }
     const st = randomPool.shift();
     if (!st) {
-      $("rName").textContent = "No hay emisoras";
-      $("rMeta").textContent = "No se encontró ninguna emisora en " + filtersText(p) + ". Prueba con otros filtros.";
+      $("rName").textContent = t("No hay emisoras");
+      $("rMeta").textContent = t("No se encontró ninguna emisora en {0}. Prueba con otros filtros.", filtersText(p));
       return;
     }
     showRandomCard(st);
     play(st, null, true);
   } catch {
-    $("rName").textContent = "Sin conexión";
-    $("rMeta").textContent = "No se pudo conectar. Revisa tu conexión.";
+    $("rName").textContent = t("Sin conexión");
+    $("rMeta").textContent = t("No se pudo conectar. Revisa tu conexión.");
   } finally { randomBusy = false; }
 }
 $("rGo").onclick = () => {
@@ -1597,7 +1613,7 @@ function paintVote() {
   if (!b || !current) return;
   const on = myVotes[current.stationuuid] === "on";
   b.classList.toggle("voted", on);
-  b.setAttribute("aria-label", on ? "Quitar mi voto" : "Votar esta emisora");
+  b.setAttribute("aria-label", on ? t("Quitar mi voto") : t("Votar esta emisora"));
 }
 $("pVote").innerHTML = THUMB_SVG;
 $("pVote").onclick = async () => {
@@ -1606,12 +1622,12 @@ $("pVote").onclick = async () => {
   const id = st.stationuuid, state = myVotes[id];
   if (state === "on") {
     myVotes[id] = "off"; store.set("myVotes", myVotes); paintVote();
-    toast("Voto quitado. El voto ya enviado no se puede borrar, sigue contando.");
+    toast(t("Voto quitado. El voto ya enviado no se puede borrar, sigue contando."));
     return;
   }
   if (state === "off") {
     myVotes[id] = "on"; store.set("myVotes", myVotes); paintVote();
-    toast("Marcada otra vez. No se envía un voto nuevo: ya votaste esta emisora.");
+    toast(t("Marcada otra vez. No se envía un voto nuevo: ya votaste esta emisora."));
     return;
   }
   const b = $("pVote");
@@ -1623,10 +1639,10 @@ $("pVote").onclick = async () => {
       st.votes = (Number(st.votes) || 0) + 1;
       setPop(st);
       document.querySelectorAll(".st").forEach((li) => { if (li.dataset.id === id) { const p = li.querySelector(".stPop"); if (p) fillPop(p, st); } });
-      toast("¡Voto enviado!");
-    } else toast("No se pudo votar ahora. Inténtalo más tarde.");
+      toast(t("¡Voto enviado!"));
+    } else toast(t("No se pudo votar ahora. Inténtalo más tarde."));
   } catch {
-    toast("No se pudo enviar el voto. Revisa tu conexión.");
+    toast(t("No se pudo enviar el voto. Revisa tu conexión."));
   } finally { b.disabled = false; paintVote(); }
 };
 
@@ -1678,29 +1694,31 @@ function sleepLeftMin() { return Math.max(0, Math.ceil((sleepEnd - Date.now()) /
 function updateSleepLabel() {
   const on = sleepEnd > 0;
   $("sleepBtn").classList.toggle("on", on);
-  $("sleepLabel").textContent = on ? sleepLeftMin() + " min" : "Apagar";
-  $("sleepState").textContent = on ? `Se apagará en ${sleepLeftMin()} min (a las ${new Date(sleepEnd).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}).` : "El temporizador está desactivado.";
+  $("sleepLabel").textContent = on ? t("{0} min", sleepLeftMin()) : t("Apagar");
+  $("sleepState").textContent = on ? t("Se apagará en {0} min (a las {1}).", sleepLeftMin(), new Date(sleepEnd).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" })) : t("El temporizador está desactivado.");
   $("sleepOff").hidden = !on;
 }
 function setSleep(min) {
   clearInterval(sleepTick);
-  if (!min) { sleepEnd = 0; updateSleepLabel(); toast("Temporizador desactivado"); return; }
+  if (!min) { sleepEnd = 0; updateSleepLabel(); toast(t("Temporizador desactivado")); return; }
   sleepEnd = Date.now() + min * 60000;
   sleepTick = setInterval(() => {
-    if (Date.now() >= sleepEnd) { clearInterval(sleepTick); sleepEnd = 0; stop(); toast("Temporizador: radio apagada"); }
+    if (Date.now() >= sleepEnd) { clearInterval(sleepTick); sleepEnd = 0; stop(); toast(t("Temporizador: radio apagada")); }
     updateSleepLabel();
   }, 5000);
   updateSleepLabel();
-  toast(`La radio se apagará en ${min} minutos`);
+  toast(t("La radio se apagará en {0} minutos", min));
 }
 $("sleepBtn").onclick = () => { updateSleepLabel(); $("sleepSheet").hidden = false; };
 $("sleepClose").onclick = () => { $("sleepSheet").hidden = true; };
+// Botones de 15/30/45 min en el idioma de la app
+document.querySelectorAll("[data-min]").forEach((b) => { if (+b.dataset.min < 60) b.textContent = t("{0} min", b.dataset.min); });
 document.querySelectorAll("[data-min]").forEach((b) => b.onclick = () => { setSleep(+b.dataset.min); $("sleepSheet").hidden = true; });
 $("sleepOff").onclick = () => { setSleep(0); $("sleepSheet").hidden = true; };
 $("sleepCustomForm").onsubmit = (e) => {
   e.preventDefault();
   const min = Math.round(+$("sleepCustom").value);
-  if (!(min >= 1 && min <= 1440)) { toast("Escribe un número de minutos entre 1 y 1440"); return; }
+  if (!(min >= 1 && min <= 1440)) { toast(t("Escribe un número de minutos entre 1 y 1440")); return; }
   store.set("sleepCustom", min);
   document.activeElement.blur();
   setSleep(min);
@@ -1718,7 +1736,7 @@ $("sleepCustom").value = store.get("sleepCustom", "") || "";
     $("pName").textContent = last.name;
     setPop(last);
     setLogo($("pLogo"), last);
-    setStatus("Pulsa ▶ para escuchar");
+    setStatus(t("Pulsa ▶ para escuchar"));
     updateMediaSession();
     refreshListsState();
   }
