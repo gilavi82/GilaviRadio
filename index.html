@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GilaviRadio">
   <meta name="theme-color" content="#0f172a">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.10">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1.0.11">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=1.0.10">
+  <link rel="stylesheet" href="style.css?v=1.0.11">
   <script>
     // En la app de pantalla de inicio del iPhone, el alto que da el navegador a veces no incluye
     // la zona de la hora (unos 47 px) y la app se queda corta por abajo. Usamos el alto real de la pantalla.
@@ -35,7 +35,7 @@
 </head>
 <body>
   <header class="top">
-    <h1><img src="icons/logo.svg?v=1.0.10" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
+    <h1><img src="icons/logo.svg?v=1.0.11" class="appLogo" alt="">GilaviRadio<small id="hdrVer" class="hdrVer">v1.0</small></h1>
     <div class="topBtns">
       <button id="sleepBtn" class="chip" title="Temporizador">⏾ <span id="sleepLabel">Apagar</span></button>
       <button id="infoBtn" class="chip round" aria-label="Información e historial">i</button>
@@ -152,7 +152,8 @@
     <ul id="statTopCountries" class="rank"></ul>
 
     <h3>Sobre la app</h3>
-    <p class="small">GilaviRadio es gratis y sin anuncios. Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
+    <div class="ftw"><b>Free to World (FTW)</b><p>GilaviRadio es una app totalmente gratuita y libre de anuncios, hecha para que cualquiera pueda usarla sin gasto alguno. Eso es lo que significa la franja azul «FTW» del icono.</p></div>
+    <p class="small">Las emisoras vienen de <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a>, una base de datos abierta mantenida por voluntarios.</p>
     <p class="small">Tus favoritas y tu historial se guardan solo en este iPhone. Si borras la app de la pantalla de inicio, se pierden.</p>
     <p class="small">Versión <span id="appVersion"></span></p>
     <button id="appRefresh" class="primary refreshBtn">↻ Actualizar la app</button>
@@ -256,7 +257,7 @@
   <audio id="audio" preload="none"></audio>
   <div id="toast" class="toast" hidden></div>
 
-  <script src="tz.js?v=1.0.10"></script>
-  <script src="app.js?v=1.0.10"></script>
+  <script src="tz.js?v=1.0.11"></script>
+  <script src="app.js?v=1.0.11"></script>
 </body>
 </html>
