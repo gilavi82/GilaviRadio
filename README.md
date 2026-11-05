@@ -1,6 +1,9 @@
 # GilaviRadio
 
 App web para iPhone para escuchar miles de radios online, gratis y sin anuncios.
+
+**Free to World (FTW):** GilaviRadio es totalmente gratuita y libre de anuncios. Está hecha para que cualquiera pueda usarla sin gasto alguno. Por eso el icono lleva la franja azul «FTW».
+
 Las emisoras vienen de [Radio Browser](https://www.radio-browser.info), una base de datos abierta.
 
 **Abrir la app:** https://gilavi82.github.io/GilaviRadio/
