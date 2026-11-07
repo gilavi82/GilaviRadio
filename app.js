@@ -423,7 +423,12 @@ let selCountries = store.get("selCountries", []);
 let selTags = store.get("selTags", []);
 const SAMPLE = 1500;
 const sampleCache = {};
+// Emisoras que no tienen país puesto en la base de datos (se buscan con countrycode vacío)
+const NOCC = "--";
+let noCountryCount = 0;
+function ccParam(code) { return code === NOCC ? "" : code; }
 function countryLabel(code) {
+  if (code === NOCC) return t("Sin país");
   const c = allCountries.find((x) => x.code === code);
   if (c) return c.name;
   try { return (REGION && REGION.of(code)) || code; } catch { return code; }
@@ -438,7 +443,7 @@ async function sample(params) {
 }
 async function tagFacet(countries) {
   const counts = new Map();
-  const lists = await Promise.all(countries.map((c) => sample({ countrycode: c })));
+  const lists = await Promise.all(countries.map((c) => sample({ countrycode: ccParam(c) })));
   for (const list of lists) for (const st of list) {
     for (let t of (st.tags || "").split(",")) { t = t.trim().toLowerCase(); if (t) counts.set(t, (counts.get(t) || 0) + 1); }
   }
@@ -449,8 +454,8 @@ async function countryFacet(tags) {
   const lists = await Promise.all(tags.map((t) => sample({ tag: t, tagExact: "true" })));
   const seen = new Set();
   for (const list of lists) for (const st of list) {
-    const cc = (st.countrycode || "").toUpperCase();
-    if (!cc || seen.has(st.stationuuid)) continue;
+    const cc = (st.countrycode || "").toUpperCase() || NOCC;
+    if (seen.has(st.stationuuid)) continue;
     seen.add(st.stationuuid);
     counts.set(cc, (counts.get(cc) || 0) + 1);
   }
@@ -506,7 +511,10 @@ async function openPicker(kind) {
     pickOptions = kind === "country"
       ? allCountries.map((c) => ({ id: c.code, name: c.name, count: c.count }))
       : allTags.map((t) => ({ id: t.name, name: t.name, count: t.count }));
+    if (kind === "country") pickOptions.unshift({ id: NOCC, name: t("Sin país"), count: noCountryCount });
   }
+  // «Sin país» siempre el primero de la lista
+  if (kind === "country") pickOptions.sort((a, b) => (b.id === NOCC) - (a.id === NOCC));
   // Lo ya marcado siempre aparece, aunque no esté en la lista ajustada
   for (const id of pickSel) if (!pickOptions.some((o) => o.id === id)) {
     pickOptions.unshift({ id, name: kind === "country" ? countryLabel(id) : id, count: 0 });
@@ -555,7 +563,7 @@ function combos(f) {
   for (const c of cs) for (const t of ts) {
     const p = {};
     if (f.name) p.name = f.name;
-    if (c) p.countrycode = c;
+    if (c) p.countrycode = ccParam(c);
     if (t) { p.tag = t; p.tagExact = "true"; }
     out.push(p);
   }
@@ -704,6 +712,7 @@ async function loadFilters() {
       .sort((a, b) => a.name.localeCompare(b.name, LOCALE));
     for (const c of list) homeSel.add(new Option(`${c.name} (${c.count})`, c.code));
     allCountries = list;
+    noCountryCount = countries.filter((c) => !c.iso_3166_1).reduce((a, c) => a + (c.stationcount || 0), 0);
     allTags = tags.filter((t) => t.name).map((t) => ({ name: t.name, count: t.stationcount }))
       .sort((a, b) => a.name.localeCompare(b.name, LOCALE));
     updatePickButtons();
@@ -1221,7 +1230,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.20";
+const APP_VERSION = "1.0.21";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
