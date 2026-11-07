@@ -467,6 +467,7 @@ function updatePickButtons() {
   $("qTagBtn").classList.toggle("on", selTags.length > 0);
   $("qCountryClear").hidden = !selCountries.length;
   $("qTagClear").hidden = !selTags.length;
+  updateSearchCount();
 }
 $("qCountryClear").onclick = () => { selCountries = []; store.set("selCountries", selCountries); updatePickButtons(); };
 $("qTagClear").onclick = () => { selTags = []; store.set("selTags", selTags); updatePickButtons(); };
@@ -612,6 +613,60 @@ async function searchMulti(f, offset) {
   const items = sortItems(await multiFetch(f, sortKey(), 100));
   return { items, full: false };
 }
+
+// ---------- Total de emisoras en el botón Buscar ----------
+// La base de datos no da el total de una búsqueda, así que se averigua sin descargar la lista:
+// se pregunta "¿hay emisora en la posición N?" (respuestas de 1 emisora) acotando como en un
+// diccionario, y al final se cuentan las pocas que quedan. Unas 5–8 rondas de consultas mínimas.
+let totalStations = null;
+async function stationsTotal() {
+  if (totalStations == null) totalStations = (await api("stats", {})).stations || 0;
+  return totalStations;
+}
+async function countOne(p) {
+  const total = await stationsTotal();
+  if (!Object.keys(p).length) return total;
+  const at = async (off) => (await api("stations/search", { hidebroken: "false", limit: 1, offset: off, ...p })).length > 0;
+  let lo = 0, hi = total; // el resultado está entre lo y hi
+  const probe = async (points) => {
+    const pts = [...new Set(points.map(Math.floor))].filter((x) => x >= lo && x < hi);
+    const ok = await Promise.all(pts.map(at));
+    pts.forEach((x, i) => { if (ok[i]) lo = Math.max(lo, x + 1); else hi = Math.min(hi, x); });
+  };
+  await probe([100, 1000, 10000]);
+  while (hi - lo > 64) await probe([1, 2, 3].map((i) => lo + ((hi - lo) * i) / 4));
+  if (hi === lo) return lo;
+  const rest = await api("stations/search", { hidebroken: "false", limit: hi - lo, offset: lo, ...p });
+  return lo + rest.length;
+}
+const countCache = new Map();
+function countFilters(f) {
+  const key = JSON.stringify([f.name.toLowerCase(), [...f.countries].sort(), [...f.tags].sort()]);
+  if (!countCache.has(key)) {
+    const cb = combos(f);
+    const pr = cb.length > 6 ? Promise.resolve(null)
+      : Promise.all(cb.map(countOne)).then((ns) => ns.reduce((a, b) => a + b, 0));
+    countCache.set(key, pr);
+    pr.catch(() => countCache.delete(key));
+  }
+  return countCache.get(key);
+}
+let countSeq = 0, countTimer = null;
+function paintSearchCount(n, approx) {
+  $("searchGo").textContent = n == null ? t("Buscar") : `${t("Buscar")} (${approx ? "≈ " : ""}${NF.format(n)})`;
+}
+function updateSearchCount() {
+  clearTimeout(countTimer);
+  countTimer = setTimeout(async () => {
+    const seq = ++countSeq, f = searchFilters();
+    try {
+      const n = await countFilters(f);
+      // Con varios géneros una emisora puede estar en dos, por eso es aproximado
+      if (seq === countSeq) paintSearchCount(n, f.tags.length > 1);
+    } catch { if (seq === countSeq) paintSearchCount(null); }
+  }, 500);
+}
+paintSearchCount(null);
 updatePickButtons();
 
 // ---------- Populares y búsqueda ----------
@@ -1166,7 +1221,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.19";
+const APP_VERSION = "1.0.20";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
@@ -1345,8 +1400,8 @@ $("mapLocate").onclick = async () => {
 (() => {
   const q = $("qName"), x = $("qClear");
   const paint = () => { x.hidden = !q.value; };
-  q.addEventListener("input", paint);
-  x.onclick = () => { q.value = ""; paint(); q.focus(); };
+  q.addEventListener("input", () => { paint(); updateSearchCount(); });
+  x.onclick = () => { q.value = ""; paint(); updateSearchCount(); q.focus(); };
   paint();
 })();
 // Actualiza votos/escuchas/tendencia de las favoritas (los datos guardados se quedan viejos)
