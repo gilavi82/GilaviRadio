@@ -1,0 +1,41 @@
+name: Copia de respaldo de emisoras
+
+# Cada semana guarda la lista de emisoras en la rama "respaldo" (un solo archivo, sin historial).
+# Las apps la leen de https://raw.githubusercontent.com/gilavi82/GilaviRadio/respaldo/emisoras.json
+# solo cuando no responde ningún servidor de Radio Browser.
+on:
+  schedule:
+    - cron: "17 4 * * 1"   # lunes 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Descargar y preparar la lista
+        run: node .github/respaldo/generar.mjs
+      - name: Guardar en la rama "respaldo"
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd salida
+          printf '# Copia de respaldo de emisoras\n\nGenerada automáticamente cada semana por el workflow "Copia de respaldo de emisoras" de la rama main. No editar a mano.\n' > README.md
+          git init -q -b respaldo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add emisoras.json README.md
+          git commit -q -m "Copia de respaldo de emisoras $(date -u +%Y-%m-%d)"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" respaldo
+          ls -l emisoras.json
