@@ -428,7 +428,7 @@ const NOCC = "--";
 let noCountryCount = 0;
 function ccParam(code) { return code === NOCC ? "" : code; }
 function countryLabel(code) {
-  if (code === NOCC) return t("Sin país");
+  if (code === NOCC) return ("- " + t("Sin país") + " -");
   const c = allCountries.find((x) => x.code === code);
   if (c) return c.name;
   try { return (REGION && REGION.of(code)) || code; } catch { return code; }
@@ -511,7 +511,7 @@ async function openPicker(kind) {
     pickOptions = kind === "country"
       ? allCountries.map((c) => ({ id: c.code, name: c.name, count: c.count }))
       : allTags.map((t) => ({ id: t.name, name: t.name, count: t.count }));
-    if (kind === "country") pickOptions.unshift({ id: NOCC, name: t("Sin país"), count: noCountryCount });
+    if (kind === "country") pickOptions.unshift({ id: NOCC, name: ("- " + t("Sin país") + " -"), count: noCountryCount });
   }
   // «Sin país» siempre el primero de la lista
   if (kind === "country") pickOptions.sort((a, b) => (b.id === NOCC) - (a.id === NOCC));
@@ -1230,7 +1230,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.21";
+const APP_VERSION = "1.0.22";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
