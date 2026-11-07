@@ -426,6 +426,10 @@ const sampleCache = {};
 // Emisoras que no tienen país puesto en la base de datos (se buscan con countrycode vacío)
 const NOCC = "--";
 let noCountryCount = 0;
+// Igual para géneros: emisoras sin etiquetas (tag vacío exacto)
+const NOTAG = "--";
+function tagParam(tag) { return tag === NOTAG ? "" : tag; }
+function tagLabel(tag) { return tag === NOTAG ? "- " + t("Sin género") + " -" : tag; }
 function ccParam(code) { return code === NOCC ? "" : code; }
 function countryLabel(code) {
   if (code === NOCC) return ("- " + t("Sin país") + " -");
@@ -445,13 +449,15 @@ async function tagFacet(countries) {
   const counts = new Map();
   const lists = await Promise.all(countries.map((c) => sample({ countrycode: ccParam(c) })));
   for (const list of lists) for (const st of list) {
-    for (let t of (st.tags || "").split(",")) { t = t.trim().toLowerCase(); if (t) counts.set(t, (counts.get(t) || 0) + 1); }
+    let any = false;
+    for (let t of (st.tags || "").split(",")) { t = t.trim().toLowerCase(); if (t) { any = true; counts.set(t, (counts.get(t) || 0) + 1); } }
+    if (!any) counts.set(NOTAG, (counts.get(NOTAG) || 0) + 1);
   }
   return counts;
 }
 async function countryFacet(tags) {
   const counts = new Map();
-  const lists = await Promise.all(tags.map((t) => sample({ tag: t, tagExact: "true" })));
+  const lists = await Promise.all(tags.map((t) => sample({ tag: tagParam(t), tagExact: "true" })));
   const seen = new Set();
   for (const list of lists) for (const st of list) {
     const cc = (st.countrycode || "").toUpperCase() || NOCC;
@@ -467,7 +473,7 @@ function pickLabel(list, empty, fmt) {
 }
 function updatePickButtons() {
   $("qCountryBtn").textContent = pickLabel(selCountries, t("Cualquier país"), countryLabel);
-  $("qTagBtn").textContent = pickLabel(selTags, t("Cualquier género"), (g) => g);
+  $("qTagBtn").textContent = pickLabel(selTags, t("Cualquier género"), tagLabel);
   $("qCountryBtn").classList.toggle("on", selCountries.length > 0);
   $("qTagBtn").classList.toggle("on", selTags.length > 0);
   $("qCountryClear").hidden = !selCountries.length;
@@ -496,10 +502,10 @@ async function openPicker(kind) {
           .sort((a, b) => a.name.localeCompare(b.name, LOCALE));
       } else {
         const counts = await tagFacet(other);
-        pickOptions = [...counts].map(([t, n]) => ({ id: t, name: t, count: n })).sort((a, b) => b.count - a.count);
+        pickOptions = [...counts].map(([g, n]) => ({ id: g, name: tagLabel(g), count: n })).sort((a, b) => b.count - a.count);
       }
       $("pickHint").textContent = kind === "country"
-        ? t("Solo países con emisoras de: {0}.", other.join(", "))
+        ? t("Solo países con emisoras de: {0}.", other.map(tagLabel).join(", "))
         : t("Solo géneros que hay en: {0} (los más comunes primero).", other.map(countryLabel).join(", "));
     } catch {
       $("pickHint").textContent = t("No se pudo cargar la lista ajustada; se muestran todos.");
@@ -512,12 +518,14 @@ async function openPicker(kind) {
       ? allCountries.map((c) => ({ id: c.code, name: c.name, count: c.count }))
       : allTags.map((t) => ({ id: t.name, name: t.name, count: t.count }));
     if (kind === "country") pickOptions.unshift({ id: NOCC, name: ("- " + t("Sin país") + " -"), count: noCountryCount });
+    else pickOptions.unshift({ id: NOTAG, name: tagLabel(NOTAG), count: 0 });
   }
   // «Sin país» siempre el primero de la lista
-  if (kind === "country") pickOptions.sort((a, b) => (b.id === NOCC) - (a.id === NOCC));
+  // (y «Sin género» el primero de los géneros)
+  pickOptions.sort((a, b) => (b.id === NOCC || b.id === NOTAG) - (a.id === NOCC || a.id === NOTAG));
   // Lo ya marcado siempre aparece, aunque no esté en la lista ajustada
   for (const id of pickSel) if (!pickOptions.some((o) => o.id === id)) {
-    pickOptions.unshift({ id, name: kind === "country" ? countryLabel(id) : id, count: 0 });
+    pickOptions.unshift({ id, name: kind === "country" ? countryLabel(id) : tagLabel(id), count: 0 });
   }
   renderPicker();
 }
@@ -564,7 +572,7 @@ function combos(f) {
     const p = {};
     if (f.name) p.name = f.name;
     if (c) p.countrycode = ccParam(c);
-    if (t) { p.tag = t; p.tagExact = "true"; }
+    if (t) { p.tag = tagParam(t); p.tagExact = "true"; }
     out.push(p);
   }
   return out;
@@ -1615,7 +1623,7 @@ function searchFilters() {
 function filtersText(f) {
   const parts = [];
   if (f.countries.length) parts.push(f.countries.map(countryLabel).join(", "));
-  if (f.tags.length) parts.push(f.tags.join(", "));
+  if (f.tags.length) parts.push(f.tags.map(tagLabel).join(", "));
   if (f.name) parts.push("«" + f.name + "»");
   return parts.length ? parts.join(" · ") : t("todo el mundo");
 }
