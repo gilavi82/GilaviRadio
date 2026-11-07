@@ -9,8 +9,27 @@ const SERVERS = [
   "https://at1.api.radio-browser.info",
 ];
 let serverIdx = 0;
+// Si no responde ningún servidor, durante un rato se usa directamente la copia de respaldo
+let serversDownUntil = 0;
 
 async function api(path, params = {}) {
+  if (Date.now() < serversDownUntil) {
+    const r = await backupApi(path, params).catch(() => null);
+    if (r != null) return r;
+  }
+  try {
+    const r = await apiOnline(path, params);
+    serversDownUntil = 0;
+    return r;
+  } catch (e) {
+    const r = await backupApi(path, params).catch(() => null);
+    if (r == null) throw e;
+    serversDownUntil = Date.now() + 3 * 60000;
+    return r;
+  }
+}
+
+async function apiOnline(path, params) {
   const qs = new URLSearchParams(params).toString();
   let lastErr;
   for (let i = 0; i < SERVERS.length; i++) {
@@ -26,6 +45,108 @@ async function api(path, params = {}) {
     } catch (e) { lastErr = e; }
   }
   throw lastErr;
+}
+
+// ---------- Copia de respaldo (por si Radio Browser deja de funcionar) ----------
+// Cada semana GitHub guarda la lista completa de emisoras en un archivo. Solo se descarga si
+// no responde ningún servidor, y se guarda en el navegador para no bajarla otra vez en 7 días.
+// Responde igual que la API a las mismas preguntas (búsquedas, países, géneros, mapa…).
+const BACKUP_URL = "https://raw.githubusercontent.com/gilavi82/GilaviRadio/respaldo/emisoras.json";
+const BACKUP_CACHE = "respaldo-emisoras";
+const BACKUP_MAX_AGE = 7 * 86400000;
+let backupPromise = null;
+function loadBackup() {
+  if (!backupPromise) backupPromise = (async () => {
+    let cache = null, old = null;
+    try { cache = await caches.open(BACKUP_CACHE); old = await cache.match(BACKUP_URL); } catch {}
+    const date = old && Number(old.headers.get("x-guardado"));
+    if (old && Date.now() - date < BACKUP_MAX_AGE) return parseBackup(await old.json());
+    try {
+      const ctrl = new AbortController();
+      const tm = setTimeout(() => ctrl.abort(), 60000);
+      const res = await fetch(BACKUP_URL, { signal: ctrl.signal, cache: "no-cache" });
+      clearTimeout(tm);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+      const data = parseBackup(JSON.parse(text));
+      try { await cache.put(BACKUP_URL, new Response(text, { headers: { "content-type": "application/json", "x-guardado": String(Date.now()) } })); } catch {}
+      return data;
+    } catch (e) {
+      if (old) return parseBackup(await old.json());
+      throw e;
+    }
+  })().catch((e) => { backupPromise = null; throw e; });
+  return backupPromise;
+}
+function parseBackup(json) {
+  if (!json || json.v !== 1 || !Array.isArray(json.stations)) throw new Error("copia no válida");
+  const F = json.fields, ix = {};
+  F.forEach((f, i) => { ix[f] = i; });
+  const rows = json.stations.map((r) => {
+    const o = {};
+    F.forEach((f, i) => { o[f] = r[i]; });
+    o.url = o.url_resolved;
+    o.countrycode = o.countrycode || "";
+    o.tagList = o.tags ? o.tags.split(",") : [];
+    o.nameLow = (o.name || "").toLowerCase();
+    return o;
+  });
+  return { rows, byId: new Map(rows.map((o) => [o.stationuuid, o])) };
+}
+function backupOut(o) {
+  const { tagList, nameLow, ...rest } = o;
+  return rest;
+}
+async function backupApi(path, params) {
+  if (/^(url|vote)\//.test(path)) return null; // contar escuchas y votar necesitan la API
+  const db = await loadBackup();
+  const p = params || {};
+  const alive = p.hidebroken === "true" ? db.rows.filter((o) => o.lastcheckok) : db.rows;
+  if (path === "stats") return { stations: db.rows.length };
+  if (path === "countries") {
+    const m = new Map();
+    for (const o of alive) m.set(o.countrycode, (m.get(o.countrycode) || 0) + 1);
+    return [...m].map(([c, n]) => ({ name: c, iso_3166_1: c, stationcount: n }));
+  }
+  if (path === "tags") {
+    const m = new Map();
+    for (const o of alive) for (const tg of o.tagList) m.set(tg, (m.get(tg) || 0) + 1);
+    const out = [...m].map(([name, n]) => ({ name, stationcount: n })).sort((a, b) => b.stationcount - a.stationcount);
+    return out.slice(0, Number(p.limit) || out.length);
+  }
+  if (path.startsWith("stations/byuuid")) {
+    const ids = path.length > 16 ? [path.slice(16)] : (p.uuids || "").split(",");
+    return ids.map((id) => db.byId.get(id.trim())).filter(Boolean).map(backupOut);
+  }
+  if (path !== "stations/search") return null;
+  const name = (p.name || "").trim().toLowerCase();
+  const hasCc = "countrycode" in p, cc = (p.countrycode || "").toUpperCase();
+  const hasTag = "tag" in p, tag = (p.tag || "").trim().toLowerCase(), exact = p.tagExact === "true";
+  const geoOnly = p.has_geo_info === "true";
+  const glat = parseFloat(p.geo_lat), glon = parseFloat(p.geo_long), gdist = parseFloat(p.geo_distance);
+  const near = isFinite(glat) && isFinite(glon) && isFinite(gdist);
+  let list = alive.filter((o) => {
+    if (name && !o.nameLow.includes(name)) return false;
+    if (hasCc && o.countrycode !== cc) return false;
+    if (hasTag) {
+      if (exact) { if (tag ? !o.tagList.includes(tag) : o.tagList.length) return false; }
+      else if (tag && !o.tagList.some((x) => x.includes(tag))) return false;
+    }
+    if ((geoOnly || near) && o.geo_lat == null) return false;
+    if (near && distKm(glat, glon, o.geo_lat, o.geo_long) * 1000 > gdist) return false;
+    return true;
+  });
+  const order = p.order || "", rev = p.reverse === "true";
+  if (order === "random") {
+    list = list.slice();
+    for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  } else if (order === "name") {
+    list = list.slice().sort((a, b) => a.nameLow.localeCompare(b.nameLow) * (rev ? -1 : 1));
+  } else if (["votes", "clickcount", "clicktrend", "bitrate"].includes(order)) {
+    list = list.slice().sort((a, b) => ((Number(a[order]) || 0) - (Number(b[order]) || 0)) * (rev ? -1 : 1));
+  }
+  const off = Number(p.offset) || 0, lim = p.limit != null ? Number(p.limit) : 100000;
+  return list.slice(off, off + lim).map(backupOut);
 }
 
 // Se muestran TODAS las emisoras, sin filtros. Si una no suena, se avisa al intentarlo.
@@ -1238,7 +1359,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.22";
+const APP_VERSION = "1.0.23";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
