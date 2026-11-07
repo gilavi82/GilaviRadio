@@ -877,6 +877,8 @@ let retries = 0;
 let everPlayed = false; // si la emisora llegó a sonar en este intento
 let retryTimer = null;
 let stallTimer = null;
+let waitTimes = []; // cuándo se quedó "cargando" tras haber sonado (para detectar cortes seguidos)
+let soundedSinceStart = false; // sonó desde la última conexión (no cuenta la espera inicial)
 
 function setStatus(s) { $("pStatus").textContent = s; }
 function setToggle(playing) { $("pToggle").textContent = playing ? "❚❚" : "▶"; }
@@ -908,6 +910,7 @@ function start() {
   if (!current) return;
   wantPlaying = true;
   clearTimeout(retryTimer);
+  soundedSinceStart = false;
   setStatus(t("Conectando…"));
   audio.src = current.url_resolved;
   audio.play().catch((e) => {
@@ -942,7 +945,8 @@ function retry(reason) {
     return;
   }
   if (retries >= 8) { stop(); setStatus(t("No se puede conectar con esta emisora")); return; }
-  const delay = Math.min(1000 * 2 ** retries, 15000);
+  // Si ya estaba sonando, el primer reintento es casi inmediato para que el corte sea corto
+  const delay = everPlayed && retries === 0 ? 300 : Math.min(1000 * 2 ** retries, 15000);
   retries++;
   setStatus(t("{0}. Reintentando…", t(reason)));
   retryTimer = setTimeout(start, delay);
@@ -964,14 +968,29 @@ audio.addEventListener("playing", () => {
     workedNow.add(current.stationuuid);
     if (current.lastcheckok === 0 || current.lastcheckok === "0" || favs.some((f) => f.stationuuid === current.stationuuid && (f.lastcheckok === 0 || f.lastcheckok === "0"))) renderFavs();
   }
-  retries = 0; everPlayed = true; clearTimeout(stallTimer);
+  retries = 0; everPlayed = true; soundedSinceStart = true; clearTimeout(stallTimer);
   setStatus(liveStatus()); setToggle(true);
   if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
 });
+// Cortes seguidos: si la emisora ya sonaba y se queda "cargando" varias veces en poco tiempo,
+// la conexión está atascada (se oye entrecortado). Se abre una conexión nueva sin esperar a
+// que el usuario tenga que parar y volver a darle a ▶.
 audio.addEventListener("waiting", () => {
   if (!wantPlaying) return;
+  if (soundedSinceStart) {
+    const now = Date.now();
+    waitTimes = waitTimes.filter((x) => now - x < 60000);
+    waitTimes.push(now);
+    if (waitTimes.length >= 3) {
+      waitTimes = [];
+      clearTimeout(stallTimer); stallTimer = null;
+      setStatus(t("{0}. Reintentando…", t("Conexión lenta")));
+      start();
+      return;
+    }
+  }
   setStatus(t("Cargando…"));
-  armStall("Conexión lenta", 12000);
+  armStall("Conexión lenta", everPlayed ? 8000 : 12000);
 });
 // Safari lanza "stalled" a menudo en directo aunque el audio siga sonando con lo que tiene guardado.
 // Antes eso reiniciaba la emisora (corte de unos segundos). Ahora solo se reintenta si el audio
@@ -1238,7 +1257,7 @@ document.querySelector(".pInfo").addEventListener("click", () => openStationInfo
 $("rLogo").addEventListener("click", () => openStationInfo(current));
 
 // ---------- Historial de escucha ----------
-const APP_VERSION = "1.0.22";
+const APP_VERSION = "1.0.23";
 document.querySelectorAll(".hdrVer").forEach(function (el) { el.textContent = "v" + APP_VERSION.split(".").slice(0, 2).join("."); });
 
 // Buscar: plegar el buscador al bajar por la lista
