@@ -1,6 +1,6 @@
 // Guarda la interfaz de la app para que abra rápido. Las emisoras y la API siempre van por red.
 // La caché "respaldo-emisoras" (copia de la lista de emisoras) la gestiona app.js: no se borra aquí.
-const CACHE = "gilaviradio-v102";
+const CACHE = "gilaviradio-v103";
 const SHELL = ["./", "index.html", "style.css", "app.js", "i18n.js", "tz.js", "manifest.webmanifest",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "icons/logo.svg"];
 
